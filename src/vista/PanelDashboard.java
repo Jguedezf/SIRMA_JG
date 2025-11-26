@@ -4,14 +4,15 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Descripcion: Panel principal que muestra una tabla con la lista de vehículos.
+ * Archivo: PanelDashboard.java
+ * Descripcion: Muestra la tabla de vehiculos y anade un boton para eliminacion.
  * Fecha: Noviembre 2025
+ * Version: 1.8
  * -----------------------------------------------------------------------------
  */
 package vista;
 
 import modelo.Vehiculo;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -20,45 +21,45 @@ import java.util.List;
 
 public class PanelDashboard extends JPanel {
 
-    private JTable tablaVehiculos;
-    private DefaultTableModel modeloTabla;
+    public JTable tablaVehiculos;
+    public DefaultTableModel modeloTabla;
+    public BotonFuturista btnEliminarVehiculo; // NUEVO BOTON
 
     public PanelDashboard() {
         setBackground(new Color(45, 50, 55));
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 20));
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        JLabel lblTitulo = new JLabel("Vehículos Registrados en el Sistema", SwingConstants.CENTER);
+        JLabel lblTitulo = new JLabel("Vehiculos Registrados en el Sistema", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
         lblTitulo.setForeground(Color.WHITE);
         add(lblTitulo, BorderLayout.NORTH);
 
-        // Configuración de la tabla
-        String[] columnas = {"Placa", "Marca", "Modelo", "Año", "Propietario"};
-        modeloTabla = new DefaultTableModel(columnas, 0);
+        String[] columnas = {"Placa", "Marca", "Modelo", "Anio", "Propietario"};
+        modeloTabla = new DefaultTableModel(columnas, 0) {
+            // Hacemos que la tabla no sea editable directamente
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tablaVehiculos = new JTable(modeloTabla);
+        tablaVehiculos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Solo se puede seleccionar una fila
 
-        // Añadir la tabla a un JScrollPane para poder hacer scroll
         JScrollPane scrollPane = new JScrollPane(tablaVehiculos);
         add(scrollPane, BorderLayout.CENTER);
+
+        // Anadimos el boton de eliminar en la parte de abajo
+        btnEliminarVehiculo = new BotonFuturista("Eliminar Vehiculo Seleccionado");
+        add(btnEliminarVehiculo, BorderLayout.SOUTH);
     }
 
-    /**
-     * Actualiza la tabla con la lista de vehículos más reciente.
-     * @param vehiculos La lista de vehículos a mostrar.
-     */
     public void actualizarTabla(List<Vehiculo> vehiculos) {
-        // Limpia la tabla
         modeloTabla.setRowCount(0);
-
-        // Llena la tabla con los datos de los vehículos
         for (Vehiculo v : vehiculos) {
             Object[] fila = {
-                    v.getPlaca(),
-                    v.getMarca(),
-                    v.getModelo(),
-                    v.getAnio(),
-                    v.getPropietario().getNombreCompleto()
+                    v.getPlaca(), v.getMarca(), v.getModelo(),
+                    v.getAnio(), v.getPropietario().getNombreCompleto()
             };
             modeloTabla.addRow(fila);
         }

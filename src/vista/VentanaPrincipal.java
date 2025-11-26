@@ -4,37 +4,35 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Descripcion: Organiza los paneles y gestiona la navegacion e interaccion
- *              entre la vista y el controlador.
+ * Archivo: VentanaPrincipal.java
+ * Descripcion: Gestiona la navegacion e interaccion para el CRUD completo.
  * Fecha: Noviembre 2025
+ * Version: 1.8
  * -----------------------------------------------------------------------------
  */
 package vista;
 
 import controlador.ControladorSIRMA;
+import modelo.Mantenimiento;
 import modelo.Propietario;
 import modelo.Vehiculo;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Optional;
 
-/**
- * Clase VentanaPrincipal
- * Contenedor principal (JFrame) de la interfaz grafica.
- */
 public class VentanaPrincipal extends JFrame {
 
     private CardLayout cardLayout;
     private PanelMenuLateral panelMenu;
-    private PanelContenidoPrincipal panelContenido;
+    private JPanel panelContenido; // Contenedor principal para las "pantallas"
+
+    // Las diferentes pantallas que se mostraran en el panel de contenido
     private PanelDashboard panelDashboard;
     private PanelRegistroVehiculo panelRegistro;
+    private PanelAgregarMantenimiento panelAgregarMantenimiento;
+
     private ControladorSIRMA controlador;
 
-    /**
-     * Constructor de la ventana.
-     * @param controlador La instancia del controlador principal de la aplicacion.
-     */
     public VentanaPrincipal(ControladorSIRMA controlador) {
         this.controlador = controlador;
 
@@ -48,35 +46,38 @@ public class VentanaPrincipal extends JFrame {
         panelMenu = new PanelMenuLateral();
 
         cardLayout = new CardLayout();
-        panelContenido = new PanelContenidoPrincipal();
-        panelContenido.setLayout(cardLayout);
+        panelContenido = new JPanel(cardLayout);
 
+        // Se crean las instancias de todos los paneles que usara la aplicacion
         panelDashboard = new PanelDashboard();
         panelRegistro = new PanelRegistroVehiculo();
+        panelAgregarMantenimiento = new PanelAgregarMantenimiento();
 
+        // Se anaden los paneles al CardLayout con un nombre unico para identificarlos
         panelContenido.add(panelDashboard, "DASHBOARD");
         panelContenido.add(panelRegistro, "REGISTRO");
+        panelContenido.add(panelAgregarMantenimiento, "AGREGAR_MANTENIMIENTO");
 
         add(panelMenu, BorderLayout.WEST);
         add(panelContenido, BorderLayout.CENTER);
 
+        // Carga inicial de datos en la tabla del dashboard
         panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos());
 
-        // --- Vinculacion de Eventos ---
         conectarAcciones();
     }
 
     /**
-     * Metodo: conectarAcciones
-     * Asigna los 'ActionListeners' a los botones para manejar los eventos del usuario.
+     * Metodo central que asigna las acciones a los botones de la interfaz.
      */
     private void conectarAcciones() {
-        panelMenu.btnRegistrarVehiculo.addActionListener(e -> {
-            cardLayout.show(panelContenido, "REGISTRO");
-        });
+        // --- Navegacion del Menu Lateral ---
+        panelMenu.btnRegistrarVehiculo.addActionListener(e -> cardLayout.show(panelContenido, "REGISTRO"));
 
         panelMenu.btnBuscarVehiculo.addActionListener(e -> {
-            buscarVehiculo();
+            // Antes de mostrar el panel, se actualiza la lista de vehiculos en el ComboBox
+            panelAgregarMantenimiento.actualizarListaVehiculos(controlador.obtenerTodosLosVehiculos());
+            cardLayout.show(panelContenido, "AGREGAR_MANTENIMIENTO");
         });
 
         panelMenu.btnVerHistorial.addActionListener(e -> {
@@ -84,14 +85,18 @@ public class VentanaPrincipal extends JFrame {
             cardLayout.show(panelContenido, "DASHBOARD");
         });
 
-        panelRegistro.btnGuardar.addActionListener(e -> {
-            guardarNuevoVehiculo();
-        });
+        // Boton para regresar al Dashboard desde el panel de mantenimiento
+        panelAgregarMantenimiento.btnVolver.addActionListener(e -> cardLayout.show(panelContenido, "DASHBOARD"));
+
+        // --- Acciones del CRUD ---
+        panelRegistro.btnGuardar.addActionListener(e -> guardarNuevoVehiculo());
+        panelAgregarMantenimiento.btnGuardarMantenimiento.addActionListener(e -> guardarNuevoMantenimiento());
+        panelDashboard.btnEliminarVehiculo.addActionListener(e -> eliminarVehiculoSeleccionado());
     }
 
     /**
-     * Metodo: guardarNuevoVehiculo
-     * Recolecta datos del formulario, los valida y llama al controlador para registrar.
+     * Metodo: guardarNuevoVehiculo (CREATE)
+     * Recolecta, valida y envia los datos del formulario de registro al controlador.
      */
     private void guardarNuevoVehiculo() {
         String placa = panelRegistro.txtPlaca.getText();
@@ -115,20 +120,10 @@ public class VentanaPrincipal extends JFrame {
             return;
         }
 
-        Propietario nuevoPropietario = new Propietario(
-                panelRegistro.txtNombrePropietario.getText(),
-                panelRegistro.txtCedulaPropietario.getText(),
-                panelRegistro.txtTelefonoPropietario.getText()
-        );
+        Propietario p = new Propietario(panelRegistro.txtNombrePropietario.getText(), panelRegistro.txtCedulaPropietario.getText(), panelRegistro.txtTelefonoPropietario.getText());
+        Vehiculo v = new Vehiculo(placa, marca, panelRegistro.txtModelo.getText(), anio, panelRegistro.txtColor.getText(), p);
 
-        Vehiculo nuevoVehiculo = new Vehiculo(
-                placa, marca, panelRegistro.txtModelo.getText(), anio,
-                panelRegistro.txtColor.getText(), nuevoPropietario
-        );
-
-        boolean exito = controlador.registrarVehiculo(nuevoVehiculo);
-
-        if (exito) {
+        if (controlador.registrarVehiculo(v)) {
             JOptionPane.showMessageDialog(this, "Vehiculo registrado con exito", "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
             panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos());
             cardLayout.show(panelContenido, "DASHBOARD");
@@ -139,30 +134,68 @@ public class VentanaPrincipal extends JFrame {
     }
 
     /**
-     * Metodo: buscarVehiculo
-     * Solicita una placa al usuario y muestra la informacion del vehiculo si existe.
+     * Metodo: guardarNuevoMantenimiento (UPDATE)
+     * Recolecta los datos del formulario de mantenimiento y los envia al controlador.
      */
-    private void buscarVehiculo() {
-        String placa = JOptionPane.showInputDialog(this, "Ingrese la placa del vehiculo a buscar:", "Busqueda de Vehiculo", JOptionPane.QUESTION_MESSAGE);
+    private void guardarNuevoMantenimiento() {
+        String placaSeleccionada = (String) panelAgregarMantenimiento.comboVehiculos.getSelectedItem();
+        if (placaSeleccionada == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un vehiculo.", "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        if (placa != null && !placa.trim().isEmpty()) {
-            Optional<Vehiculo> vehiculoEncontrado = controlador.buscarVehiculoPorPlaca(placa.trim());
+        String tipoServicio = panelAgregarMantenimiento.txtTipoServicio.getText();
+        if (tipoServicio.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El tipo de servicio es obligatorio.", "Campo Vacio", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-            if (vehiculoEncontrado.isPresent()) {
-                Vehiculo v = vehiculoEncontrado.get();
-                StringBuilder detalles = new StringBuilder();
-                detalles.append("--- Datos del Vehiculo ---\n");
-                detalles.append("Placa: ").append(v.getPlaca().toUpperCase()).append("\n");
-                detalles.append("Marca: ").append(v.getMarca()).append("\n");
-                detalles.append("Modelo: ").append(v.getModelo()).append("\n");
-                detalles.append("Anio: ").append(v.getAnio()).append("\n\n");
-                detalles.append("--- Datos del Propietario ---\n");
-                detalles.append("Nombre: ").append(v.getPropietario().getNombreCompleto()).append("\n");
-                detalles.append("Cedula: ").append(v.getPropietario().getCedula()).append("\n");
+        double costo;
+        int kilometraje;
+        try {
+            costo = Double.parseDouble(panelAgregarMantenimiento.txtCosto.getText());
+            kilometraje = Integer.parseInt(panelAgregarMantenimiento.txtKilometraje.getText());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Costo y Kilometraje deben ser numeros validos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-                JOptionPane.showMessageDialog(this, detalles.toString(), "Vehiculo Encontrado", JOptionPane.INFORMATION_MESSAGE);
+        Mantenimiento nuevoMantenimiento = new Mantenimiento(tipoServicio, panelAgregarMantenimiento.txtDescripcion.getText(), costo, kilometraje);
+
+        if (controlador.agregarMantenimientoAVehiculo(placaSeleccionada, nuevoMantenimiento)) {
+            JOptionPane.showMessageDialog(this, "Mantenimiento agregado con exito al vehiculo " + placaSeleccionada, "Exito", JOptionPane.INFORMATION_MESSAGE);
+            cardLayout.show(panelContenido, "DASHBOARD");
+        } else {
+            JOptionPane.showMessageDialog(this, "Ocurrio un error inesperado al agregar el mantenimiento.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Metodo: eliminarVehiculoSeleccionado (DELETE)
+     * Elimina el vehiculo que este seleccionado en la tabla del dashboard.
+     */
+    private void eliminarVehiculoSeleccionado() {
+        int filaSeleccionada = panelDashboard.tablaVehiculos.getSelectedRow();
+
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un vehiculo de la tabla para eliminar.", "Ningun Vehiculo Seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String placa = (String) panelDashboard.modeloTabla.getValueAt(filaSeleccionada, 0);
+
+        int confirmacion = JOptionPane.showConfirmDialog(this, "Esta seguro de que desea eliminar el vehiculo con placa " + placa + "?\nEsta accion no se puede deshacer.", "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            // AQUI ESTA LA CORRECCION: Asegurarse que el nombre del metodo es identico
+            boolean exito = controlador.eliminarVehiculo(placa);
+
+            if (exito) {
+                JOptionPane.showMessageDialog(this, "Vehiculo eliminado con exito.", "Eliminacion Completa", JOptionPane.INFORMATION_MESSAGE);
+                panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos()); // Actualiza la tabla
             } else {
-                JOptionPane.showMessageDialog(this, "No se encontro ningun vehiculo con la placa: " + placa, "Busqueda Fallida", JOptionPane.WARNING_MESSAGE);
+                // Este error teoricamente no deberia ocurrir si el vehiculo esta en la tabla
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar el vehiculo.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

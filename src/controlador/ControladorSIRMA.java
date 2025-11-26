@@ -4,9 +4,11 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
+ * Archivo: ControladorSIRMA.java
  * Descripcion: Gestiona la logica principal de la aplicacion (CRUD) y sirve
  *              de puente entre la interfaz de usuario y los datos.
  * Fecha: Noviembre 2025
+ * Version: 1.8
  * -----------------------------------------------------------------------------
  */
 package controlador;
@@ -83,6 +85,16 @@ public class ControladorSIRMA {
         return false;
     }
 
+    /**
+     * Metodo: eliminarVehiculo (Operacion 'Delete')
+     * Elimina un vehiculo de la lista usando su placa.
+     * @param placa La placa del vehiculo a eliminar.
+     * @return true si se encontro y elimino el vehiculo.
+     */
+    public boolean eliminarVehiculo(String placa) {
+        return listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
+    }
+
     // --- Metodos Adicionales ---
 
     /**
@@ -114,15 +126,19 @@ public class ControladorSIRMA {
      */
     private void cargarDatosDePrueba() {
         Propietario prop1 = new Propietario("Carlos Rodriguez", "V12345678", "0414-1112233");
+        Propietario prop2 = new Propietario("Ana Martinez", "V87654321", "0424-5556677");
         Propietario propJohanna = new Propietario("Johanna Guedez", "V14089807", "0412-9876543");
 
         Vehiculo vehiculo1 = new Vehiculo("AA123BC", "Toyota", "Corolla", 2022, "Gris", prop1);
         vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintetico", 50.0, 15000));
 
-        // CORREGIDO: La placa "JGF140" cumple con el formato "Geo".
+        Vehiculo vehiculo2 = new Vehiculo("DEF456", "Ford", "Explorer", 2020, "Negro", prop2);
+        vehiculo2.agregarMantenimiento(new Mantenimiento("Escaneo Computarizado", "Revision de sensor de oxigeno", 30.0, 40000));
+
         Vehiculo vehiculoJohanna = new Vehiculo("JGF140", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
 
         this.listaVehiculos.add(vehiculo1);
+        this.listaVehiculos.add(vehiculo2);
         this.listaVehiculos.add(vehiculoJohanna);
     }
 }
