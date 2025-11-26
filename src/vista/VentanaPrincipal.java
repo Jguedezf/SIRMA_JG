@@ -4,10 +4,8 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: VentanaPrincipal.java
  * Descripcion: Gestiona la navegacion e interaccion para el CRUD completo.
  * Fecha: Noviembre 2025
- * Version: 1.8
  * -----------------------------------------------------------------------------
  */
 package vista;
@@ -24,9 +22,8 @@ public class VentanaPrincipal extends JFrame {
 
     private CardLayout cardLayout;
     private PanelMenuLateral panelMenu;
-    private JPanel panelContenido; // Contenedor principal para las "pantallas"
+    private JPanel panelContenido;
 
-    // Las diferentes pantallas que se mostraran en el panel de contenido
     private PanelDashboard panelDashboard;
     private PanelRegistroVehiculo panelRegistro;
     private PanelAgregarMantenimiento panelAgregarMantenimiento;
@@ -42,18 +39,15 @@ public class VentanaPrincipal extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // --- Configuracion de Paneles ---
         panelMenu = new PanelMenuLateral();
 
         cardLayout = new CardLayout();
         panelContenido = new JPanel(cardLayout);
 
-        // Se crean las instancias de todos los paneles que usara la aplicacion
         panelDashboard = new PanelDashboard();
         panelRegistro = new PanelRegistroVehiculo();
         panelAgregarMantenimiento = new PanelAgregarMantenimiento();
 
-        // Se anaden los paneles al CardLayout con un nombre unico para identificarlos
         panelContenido.add(panelDashboard, "DASHBOARD");
         panelContenido.add(panelRegistro, "REGISTRO");
         panelContenido.add(panelAgregarMantenimiento, "AGREGAR_MANTENIMIENTO");
@@ -61,21 +55,16 @@ public class VentanaPrincipal extends JFrame {
         add(panelMenu, BorderLayout.WEST);
         add(panelContenido, BorderLayout.CENTER);
 
-        // Carga inicial de datos en la tabla del dashboard
         panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos());
 
         conectarAcciones();
+        personalizarJOptionPane(); // Aplicar estilo al iniciar
     }
 
-    /**
-     * Metodo central que asigna las acciones a los botones de la interfaz.
-     */
     private void conectarAcciones() {
-        // --- Navegacion del Menu Lateral ---
         panelMenu.btnRegistrarVehiculo.addActionListener(e -> cardLayout.show(panelContenido, "REGISTRO"));
 
         panelMenu.btnBuscarVehiculo.addActionListener(e -> {
-            // Antes de mostrar el panel, se actualiza la lista de vehiculos en el ComboBox
             panelAgregarMantenimiento.actualizarListaVehiculos(controlador.obtenerTodosLosVehiculos());
             cardLayout.show(panelContenido, "AGREGAR_MANTENIMIENTO");
         });
@@ -85,19 +74,13 @@ public class VentanaPrincipal extends JFrame {
             cardLayout.show(panelContenido, "DASHBOARD");
         });
 
-        // Boton para regresar al Dashboard desde el panel de mantenimiento
         panelAgregarMantenimiento.btnVolver.addActionListener(e -> cardLayout.show(panelContenido, "DASHBOARD"));
 
-        // --- Acciones del CRUD ---
         panelRegistro.btnGuardar.addActionListener(e -> guardarNuevoVehiculo());
         panelAgregarMantenimiento.btnGuardarMantenimiento.addActionListener(e -> guardarNuevoMantenimiento());
         panelDashboard.btnEliminarVehiculo.addActionListener(e -> eliminarVehiculoSeleccionado());
     }
 
-    /**
-     * Metodo: guardarNuevoVehiculo (CREATE)
-     * Recolecta, valida y envia los datos del formulario de registro al controlador.
-     */
     private void guardarNuevoVehiculo() {
         String placa = panelRegistro.txtPlaca.getText();
         String marca = panelRegistro.txtMarca.getText();
@@ -144,11 +127,13 @@ public class VentanaPrincipal extends JFrame {
             return;
         }
 
-        String tipoServicio = panelAgregarMantenimiento.txtTipoServicio.getText();
-        if (tipoServicio.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El tipo de servicio es obligatorio.", "Campo Vacio", JOptionPane.WARNING_MESSAGE);
+        // NUEVO: Obtener el servicio del ComboBox
+        int indiceServicio = panelAgregarMantenimiento.comboServicios.getSelectedIndex();
+        if (indiceServicio == 0) { // El indice 0 es "--- Seleccione un Servicio ---"
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un tipo de servicio.", "Campo Vacio", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        String tipoServicio = (String) panelAgregarMantenimiento.comboServicios.getSelectedItem();
 
         double costo;
         int kilometraje;
@@ -160,20 +145,19 @@ public class VentanaPrincipal extends JFrame {
             return;
         }
 
-        Mantenimiento nuevoMantenimiento = new Mantenimiento(tipoServicio, panelAgregarMantenimiento.txtDescripcion.getText(), costo, kilometraje);
+        String descripcion = panelAgregarMantenimiento.txtDescripcion.getText();
+
+        Mantenimiento nuevoMantenimiento = new Mantenimiento(tipoServicio, descripcion, costo, kilometraje);
 
         if (controlador.agregarMantenimientoAVehiculo(placaSeleccionada, nuevoMantenimiento)) {
             JOptionPane.showMessageDialog(this, "Mantenimiento agregado con exito al vehiculo " + placaSeleccionada, "Exito", JOptionPane.INFORMATION_MESSAGE);
+            panelAgregarMantenimiento.limpiarCampos(); // Limpia el formulario
             cardLayout.show(panelContenido, "DASHBOARD");
         } else {
             JOptionPane.showMessageDialog(this, "Ocurrio un error inesperado al agregar el mantenimiento.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    /**
-     * Metodo: eliminarVehiculoSeleccionado (DELETE)
-     * Elimina el vehiculo que este seleccionado en la tabla del dashboard.
-     */
     private void eliminarVehiculoSeleccionado() {
         int filaSeleccionada = panelDashboard.tablaVehiculos.getSelectedRow();
 
@@ -187,23 +171,15 @@ public class VentanaPrincipal extends JFrame {
         int confirmacion = JOptionPane.showConfirmDialog(this, "Esta seguro de que desea eliminar el vehiculo con placa " + placa + "?\nEsta accion no se puede deshacer.", "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // AQUI ESTA LA CORRECCION: Asegurarse que el nombre del metodo es identico
-            boolean exito = controlador.eliminarVehiculo(placa);
-
-            if (exito) {
+            if (controlador.eliminarVehiculo(placa)) {
                 JOptionPane.showMessageDialog(this, "Vehiculo eliminado con exito.", "Eliminacion Completa", JOptionPane.INFORMATION_MESSAGE);
-                panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos()); // Actualiza la tabla
+                panelDashboard.actualizarTabla(controlador.obtenerTodosLosVehiculos());
             } else {
-                // Este error teoricamente no deberia ocurrir si el vehiculo esta en la tabla
                 JOptionPane.showMessageDialog(this, "No se pudo eliminar el vehiculo.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    /**
-     * Metodo: limpiarCamposRegistro
-     * Restablece los campos de texto del formulario de registro.
-     */
     private void limpiarCamposRegistro() {
         panelRegistro.txtPlaca.setText("");
         panelRegistro.txtMarca.setText("");
@@ -213,5 +189,14 @@ public class VentanaPrincipal extends JFrame {
         panelRegistro.txtNombrePropietario.setText("");
         panelRegistro.txtCedulaPropietario.setText("");
         panelRegistro.txtTelefonoPropietario.setText("");
+    }
+
+    private void personalizarJOptionPane() {
+        UIManager.put("OptionPane.background", new Color(45, 50, 55));
+        UIManager.put("Panel.background", new Color(45, 50, 55));
+        UIManager.put("OptionPane.messageForeground", Color.WHITE);
+        UIManager.put("Button.background", new Color(50, 55, 60));
+        UIManager.put("Button.foreground", Color.WHITE);
+        UIManager.put("Button.focus", new Color(0, 120, 215));
     }
 }

@@ -5,14 +5,15 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: PanelAgregarMantenimiento.java
- * Descripcion: Define el formulario para agregar un nuevo registro de mantenimiento
- *              a un vehiculo existente.
+ * Descripcion: Redisenado para usar un JComboBox para los tipos de servicio
+ *              y mejorar la distribucion de los componentes.
  * Fecha: Noviembre 2025
- * Version: 1.8
+ * Version: 1.9
  * -----------------------------------------------------------------------------
  */
 package vista;
 
+import modelo.CatalogoServicios;
 import modelo.Vehiculo;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,8 +22,8 @@ import java.util.List;
 
 public class PanelAgregarMantenimiento extends JPanel {
 
-    public JComboBox<String> comboVehiculos; // Para seleccionar el vehiculo
-    public JTextField txtTipoServicio;
+    public JComboBox<String> comboVehiculos;
+    public JComboBox<String> comboServicios; // <-- REEMPLAZO DEL CAMPO DE TEXTO
     public JTextArea txtDescripcion;
     public JTextField txtCosto;
     public JTextField txtKilometraje;
@@ -34,39 +35,58 @@ public class PanelAgregarMantenimiento extends JPanel {
         setBorder(new EmptyBorder(40, 40, 40, 40));
         setLayout(new BorderLayout(20, 20));
 
-        // Titulo del panel
         JLabel lblTitulo = new JLabel("Agregar Nuevo Mantenimiento", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
         lblTitulo.setForeground(Color.WHITE);
         add(lblTitulo, BorderLayout.NORTH);
 
-        // Panel para el formulario
-        JPanel panelFormulario = new JPanel(new GridLayout(0, 2, 15, 15));
+        // --- Panel de Formulario Mejorado ---
+        // Usaremos GridBagLayout para un control mas preciso del tamano
+        JPanel panelFormulario = new JPanel(new GridBagLayout());
         panelFormulario.setBackground(new Color(45, 50, 55));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        panelFormulario.add(crearLabel("Seleccionar Vehiculo (Placa):"));
+        // Fila 0: Seleccionar Vehiculo
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
+        panelFormulario.add(crearLabel("Vehiculo (Placa):"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST; gbc.weightx = 1.0;
         comboVehiculos = new JComboBox<>();
-        panelFormulario.add(comboVehiculos);
+        panelFormulario.add(comboVehiculos, gbc);
 
-        panelFormulario.add(crearLabel("Tipo de Servicio:"));
-        txtTipoServicio = new JTextField();
-        panelFormulario.add(txtTipoServicio);
+        // Fila 1: Tipo de Servicio (Ahora es un ComboBox)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.EAST; gbc.weightx = 0;
+        panelFormulario.add(crearLabel("Tipo de Servicio:"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
+        comboServicios = new JComboBox<>(CatalogoServicios.getServicios()); // Cargamos los servicios
+        panelFormulario.add(comboServicios, gbc);
 
-        panelFormulario.add(crearLabel("Descripcion Detallada:"));
-        txtDescripcion = new JTextArea(3, 20);
-        panelFormulario.add(new JScrollPane(txtDescripcion));
+        // Fila 2: Descripcion
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.NORTHEAST;
+        panelFormulario.add(crearLabel("Descripcion Detallada:"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
+        txtDescripcion = new JTextArea(4, 20); // Mas grande
+        JScrollPane scrollDescripcion = new JScrollPane(txtDescripcion);
+        panelFormulario.add(scrollDescripcion, gbc);
 
-        panelFormulario.add(crearLabel("Costo (Ej: 50.0):"));
-        txtCosto = new JTextField();
-        panelFormulario.add(txtCosto);
+        // Fila 3: Costo
+        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.EAST;
+        panelFormulario.add(crearLabel("Costo (Ej: 50.0):"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
+        txtCosto = new JTextField(10); // Tamano mas reducido
+        panelFormulario.add(txtCosto, gbc);
 
-        panelFormulario.add(crearLabel("Kilometraje Actual:"));
-        txtKilometraje = new JTextField();
-        panelFormulario.add(txtKilometraje);
+        // Fila 4: Kilometraje
+        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.EAST;
+        panelFormulario.add(crearLabel("Kilometraje Actual:"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
+        txtKilometraje = new JTextField(10); // Tamano mas reducido
+        panelFormulario.add(txtKilometraje, gbc);
 
         add(panelFormulario, BorderLayout.CENTER);
 
-        // Panel para los botones de accion
+        // --- Panel de Botones ---
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         panelBotones.setBackground(new Color(45, 50, 55));
         btnGuardarMantenimiento = new BotonFuturista("Guardar Mantenimiento");
@@ -76,12 +96,8 @@ public class PanelAgregarMantenimiento extends JPanel {
         add(panelBotones, BorderLayout.SOUTH);
     }
 
-    /**
-     * Carga la lista de placas de vehiculos en el JComboBox.
-     * @param vehiculos Lista de todos los vehiculos del sistema.
-     */
     public void actualizarListaVehiculos(List<Vehiculo> vehiculos) {
-        comboVehiculos.removeAllItems(); // Limpia la lista anterior
+        comboVehiculos.removeAllItems();
         for (Vehiculo v : vehiculos) {
             comboVehiculos.addItem(v.getPlaca());
         }
@@ -92,5 +108,15 @@ public class PanelAgregarMantenimiento extends JPanel {
         label.setFont(new Font("Arial", Font.BOLD, 14));
         label.setForeground(Color.WHITE);
         return label;
+    }
+
+    /**
+     * Limpia todos los campos del formulario despues de guardar.
+     */
+    public void limpiarCampos() {
+        comboServicios.setSelectedIndex(0); // Vuelve a "--- Seleccione ---"
+        txtDescripcion.setText("");
+        txtCosto.setText("");
+        txtKilometraje.setText("");
     }
 }

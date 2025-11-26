@@ -5,10 +5,9 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: ControladorSIRMA.java
- * Descripcion: Gestiona la logica principal de la aplicacion (CRUD) y sirve
- *              de puente entre la interfaz de usuario y los datos.
+ * Descripcion: Gestiona la logica de negocio e integra la capa de persistencia.
  * Fecha: Noviembre 2025
- * Version: 1.8
+ * Version: 1.9
  * -----------------------------------------------------------------------------
  */
 package controlador;
@@ -16,93 +15,64 @@ package controlador;
 import modelo.Mantenimiento;
 import modelo.Propietario;
 import modelo.Vehiculo;
+import persistencia.GestionArchivos; // <-- IMPORTANTE: Importamos la nueva clase
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Clase ControladorSIRMA (Controlador en MVC)
- * Centro de operaciones de la aplicacion. Maneja la logica de negocio.
- */
 public class ControladorSIRMA {
 
-    /**
-     * Atributo: listaVehiculos
-     * Almacena en memoria la coleccion de todos los objetos 'Vehiculo'.
-     */
     private List<Vehiculo> listaVehiculos;
+    private GestionArchivos gestorArchivos; // <-- NUEVO: Atributo para manejar archivos
 
-    /**
-     * Constructor de la clase.
-     * Inicializa la lista de vehiculos y carga datos de prueba.
-     */
     public ControladorSIRMA() {
-        this.listaVehiculos = new ArrayList<>();
-        cargarDatosDePrueba();
+        this.gestorArchivos = new GestionArchivos(); // Creamos la instancia
+        this.listaVehiculos = gestorArchivos.cargarDatos(); // Cargamos datos al iniciar
+
+        // Si la lista esta vacia (primera ejecucion o archivo corrupto), cargamos datos de prueba.
+        if (this.listaVehiculos.isEmpty()) {
+            cargarDatosDePrueba();
+            gestorArchivos.guardarDatos(this.listaVehiculos); // Guardamos los datos de prueba iniciales
+        }
     }
 
-    // --- Metodos para el CRUD de Vehiculos ---
+    // --- Metodos CRUD (Ahora con guardado automatico) ---
 
-    /**
-     * Metodo: registrarVehiculo (Operacion 'Create')
-     * Anade un nuevo vehiculo a la lista, previa validacion de placa no duplicada.
-     * @param v Objeto Vehiculo a registrar.
-     * @return true si se registro, false si la placa ya existia.
-     */
     public boolean registrarVehiculo(Vehiculo v) {
         if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) {
             return false;
         }
         this.listaVehiculos.add(v);
+        gestorArchivos.guardarDatos(this.listaVehiculos); // Guardar despues de anadir
         return true;
     }
 
-    /**
-     * Metodo: buscarVehiculoPorPlaca (Operacion 'Read')
-     * Busca un vehiculo especifico usando su placa.
-     * @param placa String con la placa a buscar.
-     * @return Un Optional que contendra el vehiculo si es encontrado.
-     */
+    public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mantenimiento) {
+        Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
+        if (vehiculoOpt.isPresent()) {
+            vehiculoOpt.get().agregarMantenimiento(mantenimiento);
+            gestorArchivos.guardarDatos(this.listaVehiculos); // Guardar despues de actualizar
+            return true;
+        }
+        return false;
+    }
+
+    public boolean eliminarVehiculo(String placa) {
+        boolean eliminado = listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
+        if (eliminado) {
+            gestorArchivos.guardarDatos(this.listaVehiculos); // Guardar despues de eliminar
+        }
+        return eliminado;
+    }
+
+    // --- El resto de metodos no cambian ---
     public Optional<Vehiculo> buscarVehiculoPorPlaca(String placa) {
         return listaVehiculos.stream()
                 .filter(vehiculo -> vehiculo.getPlaca().equalsIgnoreCase(placa))
                 .findFirst();
     }
 
-    /**
-     * Metodo: agregarMantenimientoAVehiculo (Operacion 'Update')
-     * Actualiza un vehiculo anadiendo un nuevo mantenimiento a su historial.
-     * @param placa Placa del vehiculo a modificar.
-     * @param mantenimiento Objeto 'Mantenimiento' con la informacion del nuevo servicio.
-     * @return true si la actualizacion fue exitosa.
-     */
-    public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mantenimiento) {
-        Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
-        if (vehiculoOpt.isPresent()) {
-            vehiculoOpt.get().agregarMantenimiento(mantenimiento);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Metodo: eliminarVehiculo (Operacion 'Delete')
-     * Elimina un vehiculo de la lista usando su placa.
-     * @param placa La placa del vehiculo a eliminar.
-     * @return true si se encontro y elimino el vehiculo.
-     */
-    public boolean eliminarVehiculo(String placa) {
-        return listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
-    }
-
-    // --- Metodos Adicionales ---
-
-    /**
-     * Metodo: esFormatoPlacaValido
-     * Valida que una placa cumpla con los formatos venezolanos (actual o anterior).
-     * @param placa La placa a validar.
-     * @return true si el formato es correcto.
-     */
     public boolean esFormatoPlacaValido(String placa) {
         if (placa == null || placa.isEmpty()) return false;
         String placaLimpia = placa.trim().toUpperCase().replace("-", "");
@@ -111,19 +81,10 @@ public class ControladorSIRMA {
         return esFormatoBolivariano || esFormatoGeo;
     }
 
-    /**
-     * Metodo: obtenerTodosLosVehiculos
-     * Proporciona a la Vista acceso a la lista completa de vehiculos.
-     * @return La lista de todos los objetos 'Vehiculo'.
-     */
     public List<Vehiculo> obtenerTodosLosVehiculos() {
         return this.listaVehiculos;
     }
 
-    /**
-     * Metodo: cargarDatosDePrueba
-     * Genera datos iniciales para la simulacion del sistema.
-     */
     private void cargarDatosDePrueba() {
         Propietario prop1 = new Propietario("Carlos Rodriguez", "V12345678", "0414-1112233");
         Propietario prop2 = new Propietario("Ana Martinez", "V87654321", "0424-5556677");
@@ -133,7 +94,6 @@ public class ControladorSIRMA {
         vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintetico", 50.0, 15000));
 
         Vehiculo vehiculo2 = new Vehiculo("DEF456", "Ford", "Explorer", 2020, "Negro", prop2);
-        vehiculo2.agregarMantenimiento(new Mantenimiento("Escaneo Computarizado", "Revision de sensor de oxigeno", 30.0, 40000));
 
         Vehiculo vehiculoJohanna = new Vehiculo("JGF140", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
 
