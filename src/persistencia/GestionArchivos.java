@@ -2,8 +2,6 @@
  * -----------------------------------------------------------------------------
  * Autora: Johanna Guedez - V14089807
  * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
  * Descripcion: Clase responsable de la persistencia de datos. Contiene los
  *              metodos para guardar y cargar la lista de vehiculos en un archivo.
  * Fecha: Noviembre 2025

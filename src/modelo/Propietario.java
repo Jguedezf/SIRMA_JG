@@ -1,9 +1,7 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
+ * Autora: Johanna Guedez
  * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
  * Descripcion: Modela la entidad Propietario.
  * Fecha: Noviembre 2025
   * -----------------------------------------------------------------------------

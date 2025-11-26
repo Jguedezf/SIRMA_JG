@@ -1,24 +1,24 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
+ * Autora: Johanna Guedez
  * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
- * Archivo: CatalogoServicios.java
- * Descripcion: Define una lista centralizada y fija de los tipos de
- *              servicios ofrecidos.
+ * Descripcion: Define una lista centralizada y estandarizada de los tipos de
+ *              servicios que ofrece el taller.
  * Fecha: Noviembre 2025
- * Version: 1.9
  * -----------------------------------------------------------------------------
  */
 package modelo;
 
+/**
+ * Clase CatalogoServicios
+ * Provee los datos maestros para los tipos de servicios disponibles.
+ */
 public class CatalogoServicios {
 
     /**
-     * Metodo estatico que retorna un arreglo con los nombres de los servicios
-     * estandar que ofrece el taller.
-     * @return Un arreglo de Strings con los servicios.
+     * Metodo: getServicios
+     * Retorna un arreglo con los nombres de los servicios estandar.
+     * @return String[] con la lista de servicios.
      */
     public static String[] getServicios() {
         return new String[] {
