@@ -5,10 +5,10 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: Propietario.java (Clase del Modelo)
- * Descripcion: Representa al dueño de un vehículo con sus datos básicos.
- *              Implementa Serializable para poder guardar y cargar los datos.
+ * Descripcion: Modela la entidad Propietario, conteniendo su información personal.
+ *              Implementa Serializable para permitir la persistencia de objetos.
  * Fecha: Noviembre 2025
- * Version: 1.1 (Sin dependencias externas)
+ * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package modelo;
@@ -20,7 +20,12 @@ public class Propietario implements Serializable {
     private String cedula;
     private String telefono;
 
-    // Este es el "Constructor". Sirve para crear un nuevo propietario dándole sus datos.
+    /**
+     * Constructor para la clase Propietario.
+     * @param nombreCompleto Nombre y apellido del propietario.
+     * @param cedula Cédula de identidad.
+     * @param telefono Número de contacto.
+     */
     public Propietario(String nombreCompleto, String cedula, String telefono) {
         this.nombreCompleto = nombreCompleto;
         this.cedula = cedula;
@@ -28,15 +33,12 @@ public class Propietario implements Serializable {
     }
 
     // --- Getters ---
-    // Son métodos públicos para poder "leer" los datos desde otras clases.
     public String getNombreCompleto() {
         return nombreCompleto;
     }
-
     public String getCedula() {
         return cedula;
     }
-
     public String getTelefono() {
         return telefono;
     }

@@ -5,10 +5,10 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: Vehiculo.java (Clase del Modelo)
- * Descripcion: Representa el objeto central del sistema. Contiene sus datos,
- *              su propietario y su historial de mantenimientos.
+ * Descripcion: Modela la entidad Vehículo, que contiene sus datos, propietario
+ *              y el historial de mantenimientos asociados.
  * Fecha: Noviembre 2025
- * Version: 1.1 (Sin dependencias externas)
+ * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package modelo;
@@ -23,11 +23,20 @@ public class Vehiculo implements Serializable {
     private String modelo;
     private int anio;
     private String color;
-    private Propietario propietario; // Un Vehículo TIENE UN Propietario (Composición)
+    private Propietario propietario; // Asociación con Propietario
 
-    // Un Vehículo TIENE UNA LISTA de Mantenimientos (Su historial)
+    // Lista para almacenar el historial de servicios del vehículo
     private List<Mantenimiento> historialMantenimientos;
 
+    /**
+     * Constructor de la clase Vehiculo.
+     * @param placa Identificador único del vehículo.
+     * @param marca Fabricante del vehículo.
+     * @param modelo Modelo específico.
+     * @param anio Año de fabricación.
+     * @param color Color del vehículo.
+     * @param propietario Objeto Propietario asociado a este vehículo.
+     */
     public Vehiculo(String placa, String marca, String modelo, int anio, String color, Propietario propietario) {
         this.placa = placa;
         this.marca = marca;
@@ -35,10 +44,13 @@ public class Vehiculo implements Serializable {
         this.anio = anio;
         this.color = color;
         this.propietario = propietario;
-        this.historialMantenimientos = new ArrayList<>(); // Se crea la lista vacía al nacer el vehículo
+        this.historialMantenimientos = new ArrayList<>();
     }
 
-    // Método para añadir un nuevo registro al historial
+    /**
+     * Agrega un nuevo registro de mantenimiento al historial del vehículo.
+     * @param mant Objeto Mantenimiento a agregar.
+     */
     public void agregarMantenimiento(Mantenimiento mant) {
         this.historialMantenimientos.add(mant);
     }

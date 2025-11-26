@@ -4,30 +4,27 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: Main.java (Punto de Entrada)
- * Descripcion: Clase principal que inicia la aplicación, creando el controlador
- *              y lanzando la interfaz gráfica principal.
+ * Archivo: VentanaPrincipal.java (Clase de la Vista)
+ * Descripcion: Define la ventana principal (JFrame) de la aplicación,
+ *              que servirá como contenedor para los demás componentes de la GUI.
  * Fecha: Noviembre 2025
- * Version: 1.1 (Sin dependencias externas)
+ * Version: 1.1
  * -----------------------------------------------------------------------------
  */
-import controlador.ControladorSIRMA;
-import vista.VentanaPrincipal;
-import javax.swing.SwingUtilities;
+package vista;
 
-public class Main {
-    public static void main(String[] args) {
-        // SwingUtilities.invokeLater es la forma correcta y segura
-        // de iniciar una interfaz gráfica en Java.
-        SwingUtilities.invokeLater(() -> {
-            // 1. Crea una instancia del cerebro del sistema
-            ControladorSIRMA controlador = new ControladorSIRMA();
+import javax.swing.*;
 
-            // 2. Crea la ventana principal
-            VentanaPrincipal ventana = new VentanaPrincipal();
+public class VentanaPrincipal extends JFrame {
 
-            // 3. ¡La hacemos visible!
-            ventana.setVisible(true);
-        });
+    /**
+     * Constructor de la VentanaPrincipal.
+     * Configura las propiedades iniciales de la ventana.
+     */
+    public VentanaPrincipal() {
+        setTitle("SIRMA-JG: Sistema de Registro de Mantenimiento de Vehículos");
+        setSize(1200, 700);
+        setLocationRelativeTo(null); // Centra la ventana.
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Termina el programa al cerrar.
     }
 }

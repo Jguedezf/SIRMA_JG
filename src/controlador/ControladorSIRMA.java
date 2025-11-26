@@ -5,10 +5,10 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: ControladorSIRMA.java (Cerebro del Sistema)
- * Descripcion: Gestiona toda la lógica de negocio (CRUD, listas, cálculos).
- *              No contiene código de interfaz gráfica, solo la inteligencia.
+ * Descripcion: Gestiona la lógica de negocio, incluyendo el CRUD de vehículos
+ *              y la carga de datos de prueba para la simulación.
  * Fecha: Noviembre 2025
- * Version: 1.1 (Sin dependencias externas)
+ * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package controlador;
@@ -16,32 +16,28 @@ package controlador;
 import modelo.Mantenimiento;
 import modelo.Propietario;
 import modelo.Vehiculo;
-
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class ControladorSIRMA {
 
-    // Esta es la "Base de Datos" en memoria. Aquí vivirá toda la información.
+    // Almacenamiento en memoria de la lista de vehículos.
     private List<Vehiculo> listaVehiculos;
 
     public ControladorSIRMA() {
         this.listaVehiculos = new ArrayList<>();
-        // ¡Magia! Al iniciar, cargamos datos de prueba para la defensa.
+        // Al instanciar el controlador, se cargan datos de prueba para la simulación.
         cargarDatosDePrueba();
     }
 
     /**
-     * FUNCIÓN 1 (CREATE): Registra un nuevo vehículo en el sistema.
-     * Valida que la placa no esté ya registrada.
-     * @param v El vehículo a registrar.
-     * @return true si se registró con éxito, false si la placa ya existía.
+     * Registra un nuevo vehículo, validando que la placa no exista previamente.
+     * @param v El objeto Vehiculo a registrar.
+     * @return true si el registro fue exitoso, false si la placa ya existe.
      */
     public boolean registrarVehiculo(Vehiculo v) {
         if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) {
-            System.out.println("Error: La placa " + v.getPlaca() + " ya está registrada.");
             return false;
         }
         this.listaVehiculos.add(v);
@@ -49,9 +45,9 @@ public class ControladorSIRMA {
     }
 
     /**
-     * FUNCIÓN 2 (READ): Busca un vehículo por su placa.
+     * Busca un vehículo por su placa (identificador único).
      * @param placa La placa a buscar.
-     * @return Un Optional que contiene el Vehiculo si se encuentra, o vacío si no.
+     * @return Un Optional que contiene el Vehiculo si se encuentra.
      */
     public Optional<Vehiculo> buscarVehiculoPorPlaca(String placa) {
         return listaVehiculos.stream()
@@ -60,10 +56,10 @@ public class ControladorSIRMA {
     }
 
     /**
-     * FUNCIÓN 3 (UPDATE): Agrega un nuevo registro de mantenimiento a un vehículo existente.
-     * @param placa La placa del vehículo.
-     * @param mantenimiento El nuevo mantenimiento a agregar.
-     * @return true si se agregó, false si el vehículo no se encontró.
+     * Agrega un registro de mantenimiento al historial de un vehículo específico.
+     * @param placa La placa del vehículo a modificar.
+     * @param mantenimiento El nuevo objeto Mantenimiento a agregar.
+     * @return true si se agregó correctamente, false si el vehículo no fue encontrado.
      */
     public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mantenimiento) {
         Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
@@ -75,54 +71,43 @@ public class ControladorSIRMA {
     }
 
     /**
-     * FUNCIÓN 4 (DELETE): Elimina un vehículo del sistema.
+     * Elimina un vehículo del sistema usando su placa.
      * @param placa La placa del vehículo a eliminar.
-     * @return true si se eliminó, false si no se encontró.
+     * @return true si se encontró y eliminó el vehículo.
      */
     public boolean eliminarVehiculo(String placa) {
         return listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
     }
 
     /**
-     * Método auxiliar para que la interfaz gráfica pueda mostrar todos los vehículos.
-     * @return La lista completa de vehículos.
+     * Retorna la lista completa de vehículos registrados en el sistema.
+     * @return Una lista de objetos Vehiculo.
      */
     public List<Vehiculo> obtenerTodosLosVehiculos() {
         return this.listaVehiculos;
     }
 
     /**
-     * MÉTODO CLAVE PARA LA DEFENSA: Carga de Datos Ficticios ("Seeding").
-     * Esto inyecta "vida artificial" al programa para que no se vea vacío.
+     * Genera un conjunto de datos ficticios (seeding) para la demostración del sistema.
+     * Esto asegura que la aplicación tenga contenido al momento de la defensa.
      */
     private void cargarDatosDePrueba() {
-        System.out.println("Cargando datos de prueba para la simulación...");
-
-        // Propietarios de prueba
         Propietario prop1 = new Propietario("Carlos Rodriguez", "V12345678", "0414-1112233");
         Propietario prop2 = new Propietario("Ana Martinez", "V87654321", "0424-5556677");
         Propietario propJohanna = new Propietario("Johanna Guedez", "V14089807", "0412-9876543");
 
-        // Vehículos de prueba
         Vehiculo vehiculo1 = new Vehiculo("AA123BC", "Toyota", "Corolla", 2022, "Gris", prop1);
-        Vehiculo vehiculo2 = new Vehiculo("AB456CD", "Ford", "Explorer", 2020, "Negro", prop2);
-        Vehiculo vehiculoJohanna = new Vehiculo("JG1408", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
-
-        // Mantenimientos para el Vehículo 1
         vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintético", 50.0, 15000));
         vehiculo1.agregarMantenimiento(new Mantenimiento("Sistema de Frenos", "Cambio de pastillas delanteras", 120.0, 25000));
 
-        // Mantenimientos para el Vehículo 2
+        Vehiculo vehiculo2 = new Vehiculo("AB456CD", "Ford", "Explorer", 2020, "Negro", prop2);
         vehiculo2.agregarMantenimiento(new Mantenimiento("Escaneo Computarizado", "Revisión de sensor de oxígeno", 30.0, 40000));
 
-        // Mantenimientos para tu vehículo
+        Vehiculo vehiculoJohanna = new Vehiculo("JG1408", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
         vehiculoJohanna.agregarMantenimiento(new Mantenimiento("Alineacion y Balanceo", "Rotación de cauchos y balanceo", 45.0, 60000));
 
-        // Agregamos los vehículos al sistema
         this.listaVehiculos.add(vehiculo1);
         this.listaVehiculos.add(vehiculo2);
         this.listaVehiculos.add(vehiculoJohanna);
-
-        System.out.println("¡Datos cargados! Sistema listo para la demostración.");
     }
 }
