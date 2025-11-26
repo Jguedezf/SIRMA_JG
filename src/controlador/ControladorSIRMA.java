@@ -4,11 +4,9 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: ControladorSIRMA.java (Cerebro del Sistema)
- * Descripcion: Gestiona la lógica de negocio, incluyendo el CRUD de vehículos
- *              y la carga de datos de prueba para la simulación.
+ * Descripcion: Gestiona la logica principal de la aplicacion (CRUD) y sirve
+ *              de puente entre la interfaz de usuario y los datos.
  * Fecha: Noviembre 2025
- * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package controlador;
@@ -20,21 +18,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Clase ControladorSIRMA (Controlador en MVC)
+ * Centro de operaciones de la aplicacion. Maneja la logica de negocio.
+ */
 public class ControladorSIRMA {
 
-    // Almacenamiento en memoria de la lista de vehículos.
+    /**
+     * Atributo: listaVehiculos
+     * Almacena en memoria la coleccion de todos los objetos 'Vehiculo'.
+     */
     private List<Vehiculo> listaVehiculos;
 
+    /**
+     * Constructor de la clase.
+     * Inicializa la lista de vehiculos y carga datos de prueba.
+     */
     public ControladorSIRMA() {
         this.listaVehiculos = new ArrayList<>();
-        // Al instanciar el controlador, se cargan datos de prueba para la simulación.
         cargarDatosDePrueba();
     }
 
+    // --- Metodos para el CRUD de Vehiculos ---
+
     /**
-     * Registra un nuevo vehículo, validando que la placa no exista previamente.
-     * @param v El objeto Vehiculo a registrar.
-     * @return true si el registro fue exitoso, false si la placa ya existe.
+     * Metodo: registrarVehiculo (Operacion 'Create')
+     * Anade un nuevo vehiculo a la lista, previa validacion de placa no duplicada.
+     * @param v Objeto Vehiculo a registrar.
+     * @return true si se registro, false si la placa ya existia.
      */
     public boolean registrarVehiculo(Vehiculo v) {
         if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) {
@@ -45,21 +56,23 @@ public class ControladorSIRMA {
     }
 
     /**
-     * Busca un vehículo por su placa (identificador único).
-     * @param placa La placa a buscar.
-     * @return Un Optional que contiene el Vehiculo si se encuentra.
+     * Metodo: buscarVehiculoPorPlaca (Operacion 'Read')
+     * Busca un vehiculo especifico usando su placa.
+     * @param placa String con la placa a buscar.
+     * @return Un Optional que contendra el vehiculo si es encontrado.
      */
     public Optional<Vehiculo> buscarVehiculoPorPlaca(String placa) {
         return listaVehiculos.stream()
-                .filter(v -> v.getPlaca().equalsIgnoreCase(placa))
+                .filter(vehiculo -> vehiculo.getPlaca().equalsIgnoreCase(placa))
                 .findFirst();
     }
 
     /**
-     * Agrega un registro de mantenimiento al historial de un vehículo específico.
-     * @param placa La placa del vehículo a modificar.
-     * @param mantenimiento El nuevo objeto Mantenimiento a agregar.
-     * @return true si se agregó correctamente, false si el vehículo no fue encontrado.
+     * Metodo: agregarMantenimientoAVehiculo (Operacion 'Update')
+     * Actualiza un vehiculo anadiendo un nuevo mantenimiento a su historial.
+     * @param placa Placa del vehiculo a modificar.
+     * @param mantenimiento Objeto 'Mantenimiento' con la informacion del nuevo servicio.
+     * @return true si la actualizacion fue exitosa.
      */
     public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mantenimiento) {
         Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
@@ -70,44 +83,46 @@ public class ControladorSIRMA {
         return false;
     }
 
+    // --- Metodos Adicionales ---
+
     /**
-     * Elimina un vehículo del sistema usando su placa.
-     * @param placa La placa del vehículo a eliminar.
-     * @return true si se encontró y eliminó el vehículo.
+     * Metodo: esFormatoPlacaValido
+     * Valida que una placa cumpla con los formatos venezolanos (actual o anterior).
+     * @param placa La placa a validar.
+     * @return true si el formato es correcto.
      */
-    public boolean eliminarVehiculo(String placa) {
-        return listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
+    public boolean esFormatoPlacaValido(String placa) {
+        if (placa == null || placa.isEmpty()) return false;
+        String placaLimpia = placa.trim().toUpperCase().replace("-", "");
+        boolean esFormatoBolivariano = placaLimpia.matches("^[A-Z]{2}[0-9]{3}[A-Z]{2}$");
+        boolean esFormatoGeo = placaLimpia.matches("^[A-Z]{3}[0-9]{3}$");
+        return esFormatoBolivariano || esFormatoGeo;
     }
 
     /**
-     * Retorna la lista completa de vehículos registrados en el sistema.
-     * @return Una lista de objetos Vehiculo.
+     * Metodo: obtenerTodosLosVehiculos
+     * Proporciona a la Vista acceso a la lista completa de vehiculos.
+     * @return La lista de todos los objetos 'Vehiculo'.
      */
     public List<Vehiculo> obtenerTodosLosVehiculos() {
         return this.listaVehiculos;
     }
 
     /**
-     * Genera un conjunto de datos ficticios (seeding) para la demostración del sistema.
-     * Esto asegura que la aplicación tenga contenido al momento de la defensa.
+     * Metodo: cargarDatosDePrueba
+     * Genera datos iniciales para la simulacion del sistema.
      */
     private void cargarDatosDePrueba() {
         Propietario prop1 = new Propietario("Carlos Rodriguez", "V12345678", "0414-1112233");
-        Propietario prop2 = new Propietario("Ana Martinez", "V87654321", "0424-5556677");
         Propietario propJohanna = new Propietario("Johanna Guedez", "V14089807", "0412-9876543");
 
         Vehiculo vehiculo1 = new Vehiculo("AA123BC", "Toyota", "Corolla", 2022, "Gris", prop1);
-        vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintético", 50.0, 15000));
-        vehiculo1.agregarMantenimiento(new Mantenimiento("Sistema de Frenos", "Cambio de pastillas delanteras", 120.0, 25000));
+        vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintetico", 50.0, 15000));
 
-        Vehiculo vehiculo2 = new Vehiculo("AB456CD", "Ford", "Explorer", 2020, "Negro", prop2);
-        vehiculo2.agregarMantenimiento(new Mantenimiento("Escaneo Computarizado", "Revisión de sensor de oxígeno", 30.0, 40000));
-
-        Vehiculo vehiculoJohanna = new Vehiculo("JG1408", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
-        vehiculoJohanna.agregarMantenimiento(new Mantenimiento("Alineacion y Balanceo", "Rotación de cauchos y balanceo", 45.0, 60000));
+        // CORREGIDO: La placa "JGF140" cumple con el formato "Geo".
+        Vehiculo vehiculoJohanna = new Vehiculo("JGF140", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
 
         this.listaVehiculos.add(vehiculo1);
-        this.listaVehiculos.add(vehiculo2);
         this.listaVehiculos.add(vehiculoJohanna);
     }
 }

@@ -4,11 +4,8 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: Mantenimiento.java (Clase del Modelo)
- * Descripcion: Modela un registro de servicio. Incluye lógica para el cálculo
- *              predictivo del próximo mantenimiento.
+ * Descripcion: Modela un registro de servicio y calcula el proximo mantenimiento.
  * Fecha: Noviembre 2025
- * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package modelo;
@@ -16,23 +13,25 @@ package modelo;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+/**
+ * Clase Mantenimiento
+ * Representa un evento de mantenimiento realizado a un vehiculo.
+ */
 public class Mantenimiento implements Serializable {
     private String tipoServicio;
     private String descripcionDetallada;
     private double costo;
     private int kilometrajeActual;
     private LocalDate fechaRealizacion;
-
-    // Atributos para la gestión predictiva
     private LocalDate fechaProximoServicio;
     private int kmProximoServicio;
 
     /**
-     * Constructor para la clase Mantenimiento.
-     * @param tipoServicio Nombre del servicio realizado (ej. "Cambio de Aceite").
-     * @param descripcionDetallada Detalles específicos del trabajo.
+     * Constructor para un nuevo registro de mantenimiento.
+     * @param tipoServicio Nombre del servicio realizado.
+     * @param descripcionDetallada Detalles del trabajo.
      * @param costo Costo del servicio.
-     * @param kilometrajeActual Kilometraje del vehículo al momento del servicio.
+     * @param kilometrajeActual Kilometraje del vehiculo al momento del servicio.
      */
     public Mantenimiento(String tipoServicio, String descripcionDetallada, double costo, int kilometrajeActual) {
         this.tipoServicio = tipoServicio;
@@ -44,8 +43,7 @@ public class Mantenimiento implements Serializable {
     }
 
     /**
-     * Calcula la fecha y kilometraje del próximo servicio basado en reglas de negocio.
-     * Regla: 3 meses o 5000 km, lo que ocurra primero.
+     * Metodo interno que calcula la fecha y kilometraje del proximo servicio.
      */
     private void calcularProximaVisita() {
         this.fechaProximoServicio = this.fechaRealizacion.plusMonths(3);

@@ -4,25 +4,30 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: Main.java (Punto de Entrada)
- * Descripcion: Punto de entrada de la aplicación. Instancia el controlador
- *              y la interfaz gráfica principal.
+ * Descripcion: Punto de entrada de la aplicacion (Entry Point).
  * Fecha: Noviembre 2025
- * Version: 1.1
- * -----------------------------------------------------------------------------
+  * -----------------------------------------------------------------------------
  */
 
 import controlador.ControladorSIRMA;
 import vista.VentanaPrincipal;
 import javax.swing.SwingUtilities;
 
+/**
+ * Clase Main
+ * Contiene el metodo main que inicia la ejecucion del programa.
+ */
 public class Main {
+    /**
+     * Metodo principal.
+     * Crea las instancias del Controlador y la Vista, y hace visible la GUI.
+     * @param args Argumentos de la linea de comandos (no se utilizan).
+     */
     public static void main(String[] args) {
-        // Se utiliza SwingUtilities.invokeLater para asegurar que la GUI
-        // se construya y actualice en el hilo de despacho de eventos (EDT).
+        // Se asegura que la GUI se inicie en el hilo de despacho de eventos de Swing.
         SwingUtilities.invokeLater(() -> {
             ControladorSIRMA controlador = new ControladorSIRMA();
-            VentanaPrincipal ventana = new VentanaPrincipal();
+            VentanaPrincipal ventana = new VentanaPrincipal(controlador);
             ventana.setVisible(true);
         });
     }

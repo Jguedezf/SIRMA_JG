@@ -4,11 +4,9 @@
  * Profesora: Ing. Dubraska Roca
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
- * Archivo: PanelContenidoPrincipal.java (Clase de la Vista)
  * Descripcion: Define el panel principal donde se mostrará el contenido
  *              dinámico de la aplicación.
  * Fecha: Noviembre 2025
- * Version: 1.1
  * -----------------------------------------------------------------------------
  */
 package vista;
