@@ -1,10 +1,14 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez
+ * Autora: Johanna Guedez - V14089807
  * Profesora: Ing. Dubraska Roca
- * Descripcion: Componente visual personalizado. Se ajusto la visibilidad
- *              para que el boton sea perceptible sin necesidad de 'hover'.
+ * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
+ *
+ * Archivo: BotonFuturista.java
+ * Descripcion: Componente visual personalizado que implementa un efecto 3D
+ *              de relieve y hundimiento al hacer clic.
  * Fecha: Noviembre 2025
+ * Version: 3.0 (Efecto 3D)
  * -----------------------------------------------------------------------------
  */
 package vista;
@@ -14,9 +18,10 @@ import java.awt.*;
 
 public class BotonFuturista extends JButton {
 
-    private Color colorFondoNormal = new Color(60, 65, 70); // Gris mas claro, visible
-    private Color colorHover = new Color(0, 120, 215); // Azul al pasar el mouse
-    private Color colorBorde = new Color(100, 100, 100); // Borde sutil
+    private Color colorFondo = new Color(60, 65, 70);
+    private Color colorHover = new Color(0, 120, 215);
+    private Color colorBordeSombra = new Color(30, 30, 30);
+    private Color colorBordeLuz = new Color(100, 100, 100);
 
     public BotonFuturista(String texto) {
         super(texto);
@@ -33,19 +38,27 @@ public class BotonFuturista extends JButton {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Logica de colores
-        if (getModel().isRollover()) {
-            g2.setColor(colorHover); // Color azul al pasar el mouse
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-        } else {
-            g2.setColor(colorFondoNormal); // Color base visible
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+        int w = getWidth();
+        int h = getHeight();
+        boolean presionado = getModel().isPressed();
+        boolean hover = getModel().isRollover();
 
-            // Dibujar borde para dar efecto de relieve sutil
-            g2.setColor(colorBorde);
-            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 15, 15);
+        if (presionado) {
+            g2.setColor(colorHover.darker());
+            g2.fillRoundRect(2, 2, w-4, h-4, 15, 15); // Efecto hundido
+        } else {
+            g2.setColor(hover ? colorHover : colorFondo);
+            g2.fillRoundRect(0, 0, w-2, h-2, 15, 15);
+
+            // Borde 3D
+            g2.setStroke(new BasicStroke(1f));
+            g2.setColor(colorBordeLuz);
+            g2.drawRoundRect(0, 0, w-2, h-2, 15, 15);
+            g2.setColor(colorBordeSombra);
+            g2.drawRoundRect(1, 1, w-1, h-1, 15, 15);
         }
 
+        if (presionado) { g.translate(1, 1); } // Desplaza texto
         super.paintComponent(g);
         g2.dispose();
     }

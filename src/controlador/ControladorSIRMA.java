@@ -1,10 +1,15 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez
+ * Autora: Johanna Guedez - V14089807
  * Profesora: Ing. Dubraska Roca
- * Descripcion: Gestiona la logica principal de la aplicacion (CRUD) y sirve
- *              de puente entre la interfaz de usuario y los datos.
+ * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
+ *
+ * Archivo: ControladorSIRMA.java
+ * Descripcion: Nucleo de la logica de negocio. Actua como intermediario entre
+ *              la Vista y el Modelo (Patron MVC). Gestiona las operaciones
+ *              CRUD, la persistencia de datos y las reglas de negocio.
  * Fecha: Noviembre 2025
+ * Version: 5.3 (Release Final)
  * -----------------------------------------------------------------------------
  */
 package controlador;
@@ -13,83 +18,132 @@ import modelo.Mantenimiento;
 import modelo.Propietario;
 import modelo.Vehiculo;
 import persistencia.GestionArchivos;
-
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Clase ControladorSIRMA (Controlador en MVC)
- * Centro de operaciones de la aplicacion. Maneja la logica de negocio y la persistencia.
+ * Clase ControladorSIRMA
+ * Responsable de orquestar el flujo de datos y aplicar las reglas de negocio.
  */
 public class ControladorSIRMA {
 
-    /**
-     * Atributo: listaVehiculos
-     * Almacena en memoria la coleccion de todos los objetos 'Vehiculo'.
-     */
+    // Almacenamiento en memoria de la flota de vehiculos.
     private List<Vehiculo> listaVehiculos;
 
-    /**
-     * Atributo: gestorArchivos
-     * Encargado de las operaciones de lectura y escritura en disco.
-     */
+    // Modulo de persistencia para guardar/cargar datos en disco.
     private GestionArchivos gestorArchivos;
 
     /**
-     * Constructor de la clase.
-     * Inicializa la lista, carga los datos persistentes o genera datos de prueba.
+     * Constructor del Controlador.
+     * Inicializa el sistema cargando los datos persistentes. Si es la primera
+     * ejecucion, genera datos de prueba (Seeding) para facilitar la evaluacion.
      */
     public ControladorSIRMA() {
         this.gestorArchivos = new GestionArchivos();
         this.listaVehiculos = gestorArchivos.cargarDatos();
 
+        // Carga inicial de datos si el sistema esta vacio
         if (this.listaVehiculos.isEmpty()) {
             cargarDatosDePrueba();
             gestorArchivos.guardarDatos(this.listaVehiculos);
         }
     }
 
-    // --- Metodos para el CRUD de Vehiculos ---
+    // --- LOGICA DE NEGOCIO: GESTION DE ORDENES ---
 
     /**
-     * Metodo: registrarVehiculo (Operacion 'Create')
-     * Anade un nuevo vehiculo a la lista y guarda los cambios.
-     * @param v Objeto Vehiculo a registrar.
-     * @return true si se registro, false si la placa ya existia.
+     * Metodo: generarNuevoIdOrden
+     * Genera un identificador unico y secuencial para cada orden de servicio.
+     * Formato: ORD-XXX
+     */
+    public String generarNuevoIdOrden() {
+        int totalOrdenes = 0;
+        for (Vehiculo v : listaVehiculos) {
+            totalOrdenes += v.getHistorialMantenimientos().size();
+        }
+        return String.format("ORD-%03d", totalOrdenes + 1);
+    }
+
+    /**
+     * Metodo: asignarMecanicoInteligente
+     * Aplica una regla de negocio simple para asignar un especialista
+     * basandose en el tipo de servicio solicitado.
+     */
+    public String asignarMecanicoInteligente(String tipo) {
+        if (tipo.contains("Aceite")) return "Pedro Perez (Fluidos)";
+        if (tipo.contains("Frenos")) return "Maria Gonzalez (Seguridad)";
+        if (tipo.contains("Alineacion")) return "Juan Taller (Jefe de Taller)";
+        if (tipo.contains("Escaneo")) return "Ing. Roberto (Diagnostico)";
+        return "Mecanico de Guardia";
+    }
+
+    /**
+     * Metodo: obtenerBitacoraOrdenes
+     * Procesa la informacion cruda del modelo y la transforma en una matriz
+     * optimizada para ser mostrada en la JTable de la vista.
+     * Incluye filtrado por placa o ID de orden.
+     */
+    public Object[][] obtenerBitacoraOrdenes(String filtro) {
+        ArrayList<Object[]> filas = new ArrayList<>();
+        String f = filtro.toUpperCase().trim();
+
+        for (Vehiculo v : listaVehiculos) {
+            for (Mantenimiento m : v.getHistorialMantenimientos()) {
+                boolean coincide = f.isEmpty() ||
+                        v.getPlaca().contains(f) ||
+                        m.getIdOrden().contains(f);
+
+                if (coincide) {
+                    filas.add(new Object[]{
+                            m.getIdOrden(),
+                            m.getFechaRealizacion().toString(),
+                            v.getPlaca(),
+                            v.getMarca() + " " + v.getModelo(),
+                            m.getTipoServicio(),
+                            m.getEstado(),
+                            "$" + m.getCostoTotal() // Uso de metodo calculado
+                    });
+                }
+            }
+        }
+
+        Object[][] data = new Object[filas.size()][7];
+        for(int i=0; i<filas.size(); i++) data[i] = filas.get(i);
+        return data;
+    }
+
+    // --- OPERACIONES CRUD (Create, Read, Update, Delete) ---
+
+    /**
+     * CREATE: Registra un nuevo vehiculo en el sistema.
+     * Valida que la placa no exista previamente.
      */
     public boolean registrarVehiculo(Vehiculo v) {
-        if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) {
-            return false;
-        }
+        if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) return false;
         this.listaVehiculos.add(v);
-        gestorArchivos.guardarDatos(this.listaVehiculos);
+        gestorArchivos.guardarDatos(this.listaVehiculos); // Persistencia automatica
         return true;
     }
 
     /**
-     * Metodo: buscarVehiculoPorPlaca (Operacion 'Read')
-     * Busca un vehiculo especifico usando su placa.
-     * @param placa String con la placa a buscar.
-     * @return Un Optional que contendra el vehiculo si es encontrado.
+     * READ: Busca un vehiculo por su placa unica.
+     * Retorna un Optional para manejar de forma segura la ausencia de datos.
      */
     public Optional<Vehiculo> buscarVehiculoPorPlaca(String placa) {
         return listaVehiculos.stream()
-                .filter(vehiculo -> vehiculo.getPlaca().equalsIgnoreCase(placa))
+                .filter(v -> v.getPlaca().equalsIgnoreCase(placa))
                 .findFirst();
     }
 
     /**
-     * Metodo: agregarMantenimientoAVehiculo (Operacion 'Update' - Vehiculo)
-     * Actualiza un vehiculo anadiendo un nuevo mantenimiento a su historial.
-     * @param placa Placa del vehiculo a modificar.
-     * @param mantenimiento Objeto 'Mantenimiento' a anadir.
-     * @return true si la actualizacion fue exitosa.
+     * UPDATE: Agrega un mantenimiento (orden) al historial de un vehiculo.
      */
-    public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mantenimiento) {
-        Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
-        if (vehiculoOpt.isPresent()) {
-            vehiculoOpt.get().agregarMantenimiento(mantenimiento);
+    public boolean agregarMantenimientoAVehiculo(String placa, Mantenimiento mant) {
+        Optional<Vehiculo> opt = buscarVehiculoPorPlaca(placa);
+        if (opt.isPresent()) {
+            opt.get().agregarMantenimiento(mant);
             gestorArchivos.guardarDatos(this.listaVehiculos);
             return true;
         }
@@ -97,82 +151,69 @@ public class ControladorSIRMA {
     }
 
     /**
-     * Metodo: eliminarVehiculo (Operacion 'Delete' - Vehiculo)
-     * Elimina un vehiculo de la lista usando su placa.
-     * @param placa La placa del vehiculo a eliminar.
-     * @return true si se encontro y elimino el vehiculo.
+     * DELETE: Elimina un vehiculo y todo su historial del sistema.
      */
     public boolean eliminarVehiculo(String placa) {
-        boolean eliminado = listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
-        if (eliminado) {
-            gestorArchivos.guardarDatos(this.listaVehiculos);
-        }
-        return eliminado;
+        boolean b = listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(placa));
+        if (b) gestorArchivos.guardarDatos(this.listaVehiculos);
+        return b;
     }
 
     /**
-     * Metodo: eliminarMantenimiento (Operacion 'Delete' - Mantenimiento)
-     * Elimina un registro especifico del historial de un vehiculo.
-     * @param placa Placa del vehiculo propietario del registro.
-     * @param mantenimiento Objeto mantenimiento a eliminar.
-     * @return true si se elimino correctamente.
+     * DELETE (Detalle): Elimina una orden especifica del historial.
      */
-    public boolean eliminarMantenimiento(String placa, Mantenimiento mantenimiento) {
-        Optional<Vehiculo> vehiculoOpt = buscarVehiculoPorPlaca(placa);
-        if (vehiculoOpt.isPresent()) {
-            Vehiculo v = vehiculoOpt.get();
-            boolean eliminado = v.getHistorialMantenimientos().remove(mantenimiento);
-            if (eliminado) {
-                gestorArchivos.guardarDatos(this.listaVehiculos);
-                return true;
-            }
+    public boolean eliminarMantenimiento(String placa, Mantenimiento m) {
+        Optional<Vehiculo> opt = buscarVehiculoPorPlaca(placa);
+        if (opt.isPresent() && opt.get().getHistorialMantenimientos().remove(m)) {
+            gestorArchivos.guardarDatos(this.listaVehiculos);
+            return true;
         }
         return false;
     }
 
-    // --- Metodos Adicionales ---
-
     /**
-     * Metodo: esFormatoPlacaValido
-     * Valida que una placa cumpla con los formatos venezolanos.
-     * @param placa La placa a validar.
-     * @return true si el formato es correcto.
+     * Validacion de formato de placa (Reglas de Transito).
+     * Acepta formato nuevo (AB123CD) y anterior (ABC123).
      */
-    public boolean esFormatoPlacaValido(String placa) {
-        if (placa == null || placa.isEmpty()) return false;
-        String placaLimpia = placa.trim().toUpperCase().replace("-", "");
-        boolean esFormatoBolivariano = placaLimpia.matches("^[A-Z]{2}[0-9]{3}[A-Z]{2}$");
-        boolean esFormatoGeo = placaLimpia.matches("^[A-Z]{3}[0-9]{3}$");
-        return esFormatoBolivariano || esFormatoGeo;
+    public boolean esFormatoPlacaValido(String p) {
+        if (p == null) return false;
+        String pl = p.trim().toUpperCase().replace("-","");
+        return pl.matches("^[A-Z]{2}[0-9]{3}[A-Z]{2}$") || pl.matches("^[A-Z]{3}[0-9]{3}$");
     }
 
-    /**
-     * Metodo: obtenerTodosLosVehiculos
-     * Proporciona a la Vista acceso a la lista completa de vehiculos.
-     * @return La lista de todos los objetos 'Vehiculo'.
-     */
-    public List<Vehiculo> obtenerTodosLosVehiculos() {
-        return this.listaVehiculos;
-    }
+    public List<Vehiculo> obtenerTodosLosVehiculos() { return listaVehiculos; }
 
-    /**
-     * Metodo: cargarDatosDePrueba
-     * Genera datos iniciales para la simulacion del sistema si no hay archivo previo.
-     */
+    // --- CARGA DE DATOS INICIALES (SEEDING) ---
     private void cargarDatosDePrueba() {
-        Propietario prop1 = new Propietario("Carlos Rodriguez", "V12345678", "0414-1112233");
-        Propietario prop2 = new Propietario("Ana Martinez", "V87654321", "0424-5556677");
-        Propietario propJohanna = new Propietario("Johanna Guedez", "V14089807", "0412-9876543");
+        Propietario p1 = new Propietario("CARLOS RODRIGUEZ", "V12345", "0414-111");
+        Propietario p2 = new Propietario("ANA FLORES", "V67890", "0424-222");
+        Propietario p3 = new Propietario("EMPRESA TRANSPORTE", "J-3030", "0212-333");
+        Propietario pJohanna = new Propietario("JOHANNA GUEDEZ", "V14089807", "0412-999");
 
-        Vehiculo vehiculo1 = new Vehiculo("AA123BC", "Toyota", "Corolla", 2022, "Gris", prop1);
-        vehiculo1.agregarMantenimiento(new Mantenimiento("Cambio de Aceite", "Aceite 10W-30 Sintetico", 50.0, 15000));
+        Vehiculo v1 = new Vehiculo("AA123BC", "TOYOTA", "COROLLA", 2022, "GRIS", p1);
+        Mantenimiento m1 = new Mantenimiento("ORD-001", "Cambio de Aceite", "Sintetico + Filtro", 40, 20, 15000, LocalDate.of(2025, 10, 5));
+        m1.setEstado("Finalizado");
+        v1.agregarMantenimiento(m1);
 
-        Vehiculo vehiculo2 = new Vehiculo("DEF456", "Ford", "Explorer", 2020, "Negro", prop2);
+        Mantenimiento m2 = new Mantenimiento("ORD-002", "Frenos Delanteros", "Cambio de Pastillas", 30, 80, 15100, LocalDate.of(2025, 10, 20));
+        m2.setEstado("Finalizado");
+        v1.agregarMantenimiento(m2);
 
-        Vehiculo vehiculoJohanna = new Vehiculo("JGF140", "Chevrolet", "Spark", 2018, "Azul", propJohanna);
+        Vehiculo v2 = new Vehiculo("XYZ987", "HYUNDAI", "ELANTRA", 2021, "ROJO", p2);
+        Mantenimiento m3 = new Mantenimiento("ORD-003", "Alineacion", "Balanceo y Rotacion", 35, 0, 60000, LocalDate.of(2025, 11, 10));
+        m3.setEstado("Finalizado");
+        v2.agregarMantenimiento(m3);
 
-        this.listaVehiculos.add(vehiculo1);
-        this.listaVehiculos.add(vehiculo2);
-        this.listaVehiculos.add(vehiculoJohanna);
+        Vehiculo v3 = new Vehiculo("JGF140", "CHEVROLET", "SPARK", 2018, "AZUL", pJohanna);
+        Mantenimiento m4 = new Mantenimiento("ORD-004", "Escaneo", "Luz de Check Engine", 30, 0, 85000, LocalDate.of(2025, 11, 26));
+        m4.setEstado("En Proceso");
+        v3.agregarMantenimiento(m4);
+
+        Vehiculo v4 = new Vehiculo("BUS100", "ENCAVA", "ENT-610", 2015, "BLANCO", p3);
+
+        this.listaVehiculos.add(v1);
+        this.listaVehiculos.add(v2);
+        this.listaVehiculos.add(v3);
+        this.listaVehiculos.add(v4);
     }
 }

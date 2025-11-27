@@ -1,9 +1,11 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez
+ * Autora: Johanna Guedez - V14089807
  * Profesora: Ing. Dubraska Roca
- * Descripcion: Modela la entidad Vehiculo y su relacion con Propietario y Mantenimiento.
+ * Descripcion: Clase Modelo Vehiculo. Representa el activo principal.
+ *              Usa el principio de Composicion (tiene Propietario y Mantenimientos).
  * Fecha: Noviembre 2025
+ * Version: 4.0
  * -----------------------------------------------------------------------------
  */
 package modelo;
@@ -14,8 +16,7 @@ import java.util.List;
 
 /**
  * Clase Vehiculo
- * Representa el objeto central del sistema. Usa composicion para asociar
- * un Propietario y una lista de Mantenimientos.
+ * Entidad principal que agrupa datos del carro, dueño e historial.
  */
 public class Vehiculo implements Serializable {
     private String placa;
@@ -24,17 +25,10 @@ public class Vehiculo implements Serializable {
     private int anio;
     private String color;
     private Propietario propietario;
+
+    // Lista de Mantenimientos (Historial)
     private List<Mantenimiento> historialMantenimientos;
 
-    /**
-     * Constructor para la clase Vehiculo.
-     * @param placa Identificador unico del vehiculo.
-     * @param marca Fabricante del vehiculo.
-     * @param modelo Modelo especifico.
-     * @param anio Anio de fabricacion.
-     * @param color Color del vehiculo.
-     * @param propietario Objeto Propietario asociado.
-     */
     public Vehiculo(String placa, String marca, String modelo, int anio, String color, Propietario propietario) {
         this.placa = placa;
         this.marca = marca;
@@ -45,20 +39,18 @@ public class Vehiculo implements Serializable {
         this.historialMantenimientos = new ArrayList<>();
     }
 
-    /**
-     * Agrega un nuevo registro de mantenimiento al historial del vehiculo.
-     * @param mant El objeto Mantenimiento a agregar.
-     */
     public void agregarMantenimiento(Mantenimiento mant) {
         this.historialMantenimientos.add(mant);
     }
 
-    // --- Getters ---
+    // GETTERS
     public String getPlaca() { return placa; }
     public String getMarca() { return marca; }
     public String getModelo() { return modelo; }
     public int getAnio() { return anio; }
     public String getColor() { return color; }
     public Propietario getPropietario() { return propietario; }
+
+    // METODO CLAVE
     public List<Mantenimiento> getHistorialMantenimientos() { return historialMantenimientos; }
 }
