@@ -5,107 +5,169 @@
  * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
  *
  * Archivo: PanelDashboard.java
- * Descripcion: Visualiza la Bitacora de Operaciones. Incluye barra de busqueda
- *              en tiempo real y tabla de ordenes.
+ * Descripcion: Muestra la bitacora de todas las ordenes de servicio. Actua como
+ *              el centro de operaciones para la gestion de mantenimientos,
+ *              con una interfaz grafica basada en iconos para las acciones.
  * Fecha: Noviembre 2025
- * Version: 3.0 (Bitacora Inteligente)
+ * Version: 9.3 (Ajuste final de estilo de botones a version original)
  * -----------------------------------------------------------------------------
  */
 package vista;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-/**
- * Clase PanelDashboard
- * Panel central de monitoreo de ordenes y servicios.
- */
 public class PanelDashboard extends JPanel {
 
-    public JTable tablaOrdenes; // Nombre actualizado
+    // --- Atributos de Componentes UI ---
+    public JTable tablaOrdenes;
     public DefaultTableModel modeloTabla;
-    public JTextField txtBuscador;
-    public BotonFuturista btnVolverInicio;
-    public BotonFuturista btnRefrescar;
-    public BotonFuturista btnEliminarVehiculo; // Mantenemos este para compatibilidad o lo quitamos si ya no se usa
+    public JButton btnAgregarOrden, btnEditarOrden, btnEliminarOrden;
 
     /**
-     * Constructor. Configura la interfaz de bitacora.
+     * Constructor del panel.
      */
     public PanelDashboard() {
+        setLayout(new BorderLayout(10, 20));
         setBackground(new Color(45, 50, 55));
-        setLayout(new BorderLayout(0, 20));
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // --- Header: Titulo y Buscador ---
         JPanel panelNorte = new JPanel(new BorderLayout(10, 10));
-        panelNorte.setBackground(new Color(45, 50, 55));
+        panelNorte.setOpaque(false);
 
-        JLabel lblTitulo = new JLabel("Bitacora de Operaciones y Servicios", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel lblTitulo = new JLabel("Bitácora y Gestión de Órdenes de Servicio", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitulo.setForeground(Color.WHITE);
         panelNorte.add(lblTitulo, BorderLayout.NORTH);
 
-        // Barra de busqueda
-        JPanel panelBuscador = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelBuscador.setBackground(new Color(45, 50, 55));
-        JLabel lblBus = new JLabel("Buscar (Placa / ID Orden):");
-        lblBus.setFont(new Font("Arial", Font.BOLD, 14));
-        lblBus.setForeground(new Color(200, 200, 200));
-        txtBuscador = new JTextField(15);
+        JPanel panelAcciones = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 5));
+        panelAcciones.setOpaque(false);
 
-        panelBuscador.add(lblBus);
-        panelBuscador.add(txtBuscador);
-        panelNorte.add(panelBuscador, BorderLayout.SOUTH);
+        // Se crean los botones usando el nuevo metodo de estilo
+        btnAgregarOrden = crearBotonEstiloOriginal("Agregar Orden", "fondo/icono_agregar.png");
+        btnEditarOrden = crearBotonEstiloOriginal("Editar", "fondo/icono_editar.png");
+        btnEliminarOrden = crearBotonEstiloOriginal("Eliminar", "fondo/icono_eliminar.png");
+
+        panelAcciones.add(btnAgregarOrden);
+        panelAcciones.add(btnEditarOrden);
+        panelAcciones.add(btnEliminarOrden);
+        panelNorte.add(panelAcciones, BorderLayout.CENTER);
 
         add(panelNorte, BorderLayout.NORTH);
 
-        // --- Tabla de Ordenes ---
-        String[] columnas = {"N Orden", "Fecha", "Placa", "Vehiculo", "Servicio", "Estado", "Total"};
-        modeloTabla = new DefaultTableModel(columnas, 0) {
+        modeloTabla = new DefaultTableModel(new String[]{"ID Orden", "Placa", "Marca", "Servicio", "Fecha", "Estado", "Cédula Prop.", "Total ($)"}, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
-
         tablaOrdenes = new JTable(modeloTabla);
-        tablaOrdenes.setRowHeight(25);
+        tablaOrdenes.setRowHeight(30);
+        tablaOrdenes.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tablaOrdenes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         tablaOrdenes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        JScrollPane scrollPane = new JScrollPane(tablaOrdenes);
-        add(scrollPane, BorderLayout.CENTER);
+        tablaOrdenes.getColumnModel().getColumn(5).setCellRenderer(new EstadoCellRenderer());
 
-        // --- Botones de Accion ---
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        panelBotones.setBackground(new Color(45, 50, 55));
+        add(new JScrollPane(tablaOrdenes), BorderLayout.CENTER);
 
-        btnRefrescar = new BotonFuturista("Refrescar / Buscar");
-        btnEliminarVehiculo = new BotonFuturista("Eliminar Orden Seleccionada"); // Renombrado para el usuario
-        btnVolverInicio = new BotonFuturista("Volver al Inicio");
-
-        panelBotones.add(btnRefrescar);
-        panelBotones.add(btnEliminarVehiculo);
-        panelBotones.add(btnVolverInicio);
-
-        add(panelBotones, BorderLayout.SOUTH);
+        btnEditarOrden.setEnabled(false);
+        btnEliminarOrden.setEnabled(false);
     }
 
     /**
-     * Metodo: llenarTablaOrdenes
-     * Renderiza la matriz de datos recibida en la tabla visual.
+     * Metodo de fabrica para crear los botones con el estilo visual que te gusta.
+     * @param texto El texto que ira debajo del icono.
+     * @param rutaIcono La ruta a la imagen del icono.
+     * @return Un JButton con el estilo final.
      */
-    public void llenarTablaOrdenes(Object[][] datos) {
-        modeloTabla.setRowCount(0);
-        for (Object[] fila : datos) {
-            modeloTabla.addRow(fila);
+    private JButton crearBotonEstiloOriginal(String texto, String rutaIcono) {
+        JButton boton = new JButton();
+
+        // 1. Cargar y escalar el icono
+        try {
+            ImageIcon icono = new ImageIcon(new ImageIcon(rutaIcono).getImage().getScaledInstance(64, 64, Image.SCALE_SMOOTH));
+            boton.setIcon(icono);
+        } catch (Exception e) {
+            System.err.println("Error cargando icono: " + rutaIcono);
+            boton.setText(texto); // Si falla, muestra solo texto
         }
+
+        // 2. Panel interno para el texto
+        JPanel panelTexto = new JPanel();
+        panelTexto.setOpaque(false);
+        JLabel lblTexto = new JLabel(texto, SwingConstants.CENTER);
+        lblTexto.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTexto.setForeground(Color.WHITE);
+        panelTexto.add(lblTexto);
+
+        // 3. Layout del boton para poner icono arriba y texto abajo
+        boton.setLayout(new BorderLayout());
+        boton.add(panelTexto, BorderLayout.SOUTH);
+
+        // 4. Estilo general del boton
+        boton.setPreferredSize(new Dimension(160, 120)); // Tamaño fijo y generoso
+        boton.setBackground(new Color(60, 63, 65));
+        boton.setBorder(BorderFactory.createLineBorder(new Color(85, 85, 85)));
+        boton.setContentAreaFilled(false);
+        boton.setOpaque(true);
+        boton.setFocusPainted(false);
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // 5. Efecto Hover
+        boton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (boton.isEnabled()) {
+                    boton.setBackground(new Color(90, 93, 95));
+                    boton.setBorder(BorderFactory.createLineBorder(Color.CYAN));
+                }
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                boton.setBackground(new Color(60, 63, 65));
+                boton.setBorder(BorderFactory.createLineBorder(new Color(85, 85, 85)));
+            }
+        });
+
+        return boton;
     }
 
-    // Metodo de compatibilidad (si VentanaPrincipal lo llama con el nombre viejo)
-    public void actualizarTabla(java.util.List<modelo.Vehiculo> lista) {
-        // Este metodo ya no se deberia usar en la version 3.0,
-        // pero lo dejamos vacio o redirigimos si fuera necesario para evitar errores de compilacion
-        // mientras actualizas VentanaPrincipal.
+    private static class EstadoCellRenderer extends DefaultTableCellRenderer {
+        // ... (Este codigo no cambia, lo dejo por completitud)
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component celda = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            String estado = (value == null) ? "" : value.toString();
+
+            switch (estado) {
+                case "Pendiente":
+                    celda.setBackground(new Color(217, 83, 79));
+                    celda.setForeground(Color.WHITE);
+                    break;
+                case "En Proceso":
+                    celda.setBackground(new Color(240, 173, 78));
+                    celda.setForeground(Color.BLACK);
+                    break;
+                case "Finalizado":
+                    celda.setBackground(new Color(92, 184, 92));
+                    celda.setForeground(Color.WHITE);
+                    break;
+                default:
+                    celda.setBackground(table.getBackground());
+                    celda.setForeground(table.getForeground());
+                    break;
+            }
+
+            if (isSelected) {
+                celda.setBackground(celda.getBackground().darker());
+            }
+
+            setHorizontalAlignment(CENTER);
+            setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+            return celda;
+        }
     }
 }

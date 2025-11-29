@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez
+ * Autora: Johanna Guedez - V14089807
  * Profesora: Ing. Dubraska Roca
- * Descripcion: Modela la entidad Propietario.
+ * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
+ *
+ * Archivo: Propietario.java
+ * Descripcion: Modela la entidad Propietario, representando al duenio de un
+ *              vehiculo con su informacion personal.
  * Fecha: Noviembre 2025
-  * -----------------------------------------------------------------------------
+ * Version: 1.0
+ * -----------------------------------------------------------------------------
  */
 package modelo;
 
 import java.io.Serializable;
 
-/**
- * Clase Propietario
- * Representa al dueño de un vehiculo con su informacion personal.
- * Implementa Serializable para permitir la persistencia de datos.
- */
 public class Propietario implements Serializable {
     private String nombreCompleto;
     private String cedula;
