@@ -1,16 +1,19 @@
 /*
- * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
- * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
- * Archivo: PanelGestionMecanicos.java
- * Descripcion: Panel de interfaz de usuario (UI) para la gestion CRUD de
- *              mecanicos. Permite al usuario crear, editar, visualizar y
- *              eliminar al personal tecnico del sistema.
- * Fecha: Noviembre 2025
- * Version: 2.0 (CRUD Completo)
- * -----------------------------------------------------------------------------
+ * ============================================================================
+ * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
+ * INSTITUCIUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
+ * ASIGNATURA:   Técnicas de Programación 3 - Sección 3
+ * AUTORA:       Johanna Gabriela Guedez Flores
+ * CÉDULA:       V-14.089.807
+ * DOCENTE:      Ing. Dubraska Roca
+ * ARCHIVO:      PanelGestionMecanicos.java
+ * FECHA:        Diciembre 2025
+ * DESCRIPCIÓN TÉCNICA:
+ * Clase de la capa de Vista que implementa la interfaz para la gestión CRUD
+ * (Crear, Leer, Actualizar, Eliminar) del personal técnico. Presenta una
+ * maquetación asimétrica que combina un formulario de entrada de datos,
+ * una botonera de acciones y una tabla de visualización con efecto 'hover'.
+ * ============================================================================
  */
 package vista;
 
@@ -20,138 +23,165 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.io.File;
+import javax.imageio.ImageIO;
 
+/**
+ * Panel para la gestión CRUD de la entidad Mecanico.
+ * PRINCIPIO POO: Herencia - Extiende de {@link JPanel}.
+ */
 public class PanelGestionMecanicos extends JPanel {
 
-    // --- Atributos de Componentes UI ---
-    public JTextField txtNombre, txtEspecialidad;
-    public BotonFuturista btnGuardar, btnLimpiar, btnEliminar;
+    public JTextField txtNombre;
+    public JTextField txtEspecialidad;
     public JTable tablaMecanicos;
     public DefaultTableModel modeloTabla;
-
-    // --- Atributo de Estado ---
-    public Mecanico mecanicoEnEdicion;
+    public BotonFuturista btnGuardar, btnLimpiar, btnEliminar;
+    public Mecanico mecanicoEnEdicion = null;
+    private int filaHover = -1;
+    private Image backgroundImage;
 
     /**
-     * Constructor del panel.
+     * Constructor del panel de gestión de mecánicos.
      */
     public PanelGestionMecanicos() {
-        setBackground(new Color(45, 50, 55));
+        try {
+            backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            setBackground(new Color(45, 50, 55));
+        }
+
         setLayout(new BorderLayout(20, 20));
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        setBorder(new EmptyBorder(20, 40, 20, 40));
 
-        JLabel lblTitulo = new JLabel("Gestión de Personal Técnico (Mecánicos)", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblTitulo.setForeground(Color.WHITE);
-        add(lblTitulo, BorderLayout.NORTH);
+        // --- SECCIÓN NORTE: TÍTULO E ICONO ---
+        JPanel pNorte = new JPanel(new BorderLayout());
+        pNorte.setOpaque(false);
+        JLabel lblTitulo = new JLabel("Gestión de Personal Técnico");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 36));
+        lblTitulo.setForeground(new Color(0, 180, 255));
+        JLabel lblIcono = new JLabel();
+        cargarIconoEnLabel(lblIcono, "fondo/mecanico.png", 100);
+        pNorte.add(lblTitulo, BorderLayout.WEST);
+        pNorte.add(lblIcono, BorderLayout.EAST);
+        add(pNorte, BorderLayout.NORTH);
 
-        // El panel combina el formulario arriba y la tabla abajo.
-        add(crearPanelFormulario(), BorderLayout.CENTER);
-        add(crearPanelTabla(), BorderLayout.SOUTH);
-    }
-
-    /**
-     * Metodo de fabrica para crear el panel del formulario.
-     * @return JPanel con los campos de texto y botones.
-     */
-    private JPanel crearPanelFormulario() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createTitledBorder(
-                null, "Datos del Mecánico", TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 16), Color.WHITE));
-
+        // --- SECCIÓN CENTRAL: FORMULARIO Y TABLA ---
+        JPanel pCentro = new JPanel(new BorderLayout(20, 20));
+        pCentro.setOpaque(false);
+        JPanel pSup = new JPanel(new BorderLayout(20, 0));
+        pSup.setOpaque(false);
+        JPanel pForm = new JPanel(new GridBagLayout());
+        pForm.setOpaque(false);
+        pForm.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Datos del Especialista", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 12) , Color.WHITE));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(15, 15, 15, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        pForm.add(new JLabel("Nombre Completo:") {{ setFont(new Font("Arial", Font.BOLD, 16)); setForeground(Color.WHITE); }}, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        txtNombre = new JTextField();
+        style(txtNombre);
+        pForm.add(txtNombre, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        pForm.add(new JLabel("Especialidad:") {{ setFont(new Font("Arial", Font.BOLD, 16)); setForeground(Color.WHITE); }}, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        txtEspecialidad = new JTextField();
+        style(txtEspecialidad);
+        pForm.add(txtEspecialidad, gbc);
+        pSup.add(pForm, BorderLayout.CENTER);
 
-        // --- Fila de Nombre ---
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.1;
-        panel.add(crearLabel("Nombre Completo:"), gbc);
-
-        gbc.gridx = 1; gbc.weightx = 0.9;
-        txtNombre = new JTextField(20);
-        panel.add(txtNombre, gbc);
-
-        // --- Fila de Especialidad ---
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(crearLabel("Especialidad:"), gbc);
-
-        gbc.gridx = 1;
-        txtEspecialidad = new JTextField(20);
-        panel.add(txtEspecialidad, gbc);
-
-        // --- Fila de Botones ---
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        panelBotones.setOpaque(false);
-        btnGuardar = new BotonFuturista("Guardar");
-        btnLimpiar = new BotonFuturista("Limpiar");
-        panelBotones.add(btnGuardar);
-        panelBotones.add(btnLimpiar);
-
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.EAST;
-        panel.add(panelBotones, gbc);
-
-        return panel;
-    }
-
-    /**
-     * Metodo de fabrica para crear el panel de la tabla.
-     * @return JPanel con la tabla y el boton de eliminar.
-     */
-    private JPanel crearPanelTabla() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createTitledBorder(
-                null, "Mecánicos Registrados", TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 16), Color.WHITE));
+        JPanel pBot = new JPanel(new GridLayout(3, 1, 0, 20));
+        pBot.setOpaque(false);
+        btnGuardar = btn("Registrar Mecánico", "fondo/icono_guardar.png");
+        btnLimpiar = btn("Limpiar Formulario", "fondo/limpiar_formulario.png");
+        btnEliminar = btn("Eliminar", "fondo/icono_eliminar.png");
+        btnEliminar.setBackground(new Color(150, 50, 50));
+        btnEliminar.setEnabled(false);
+        pBot.add(btnGuardar);
+        pBot.add(btnLimpiar);
+        pBot.add(btnEliminar);
+        pSup.add(pBot, BorderLayout.EAST);
+        pCentro.add(pSup, BorderLayout.NORTH);
 
         modeloTabla = new DefaultTableModel(new String[]{"Nombre", "Especialidad"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int r, int c) { return false; }
         };
-        tablaMecanicos = new JTable(modeloTabla);
-        tablaMecanicos.setRowHeight(28);
-        tablaMecanicos.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        tablaMecanicos.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        tablaMecanicos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        JScrollPane scrollPane = new JScrollPane(tablaMecanicos);
-        scrollPane.setPreferredSize(new Dimension(scrollPane.getWidth(), 200)); // Altura fija para la tabla
-        panel.add(scrollPane, BorderLayout.CENTER);
+        tablaMecanicos = new JTable(modeloTabla) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer r, int rw, int c) {
+                Component cp = super.prepareRenderer(r, rw, c);
+                if (!isRowSelected(rw)) {
+                    cp.setBackground(rw == filaHover ? new Color(230, 240, 255) : Color.WHITE);
+                }
+                return cp;
+            }
+        };
 
-        btnEliminar = new BotonFuturista("Eliminar Seleccionado");
-        btnEliminar.setEnabled(false);
-        JPanel pSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pSur.setOpaque(false);
-        pSur.add(btnEliminar);
-        panel.add(pSur, BorderLayout.SOUTH);
+        tablaMecanicos.addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseMoved(MouseEvent e) {
+                int r = tablaMecanicos.rowAtPoint(e.getPoint());
+                if (r != filaHover) {
+                    filaHover = r;
+                    tablaMecanicos.repaint();
+                }
+            }
+        });
 
-        return panel;
+        tablaMecanicos.setRowHeight(35);
+        tablaMecanicos.setFont(new Font("Arial", Font.BOLD, 14));
+        tablaMecanicos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+
+        JScrollPane sc = new JScrollPane(tablaMecanicos);
+        sc.getViewport().setBackground(Color.WHITE);
+        pCentro.add(sc, BorderLayout.CENTER);
+        add(pCentro, BorderLayout.CENTER);
     }
 
-    /**
-     * Metodo publico para limpiar el formulario y resetear el estado.
-     */
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, getWidth(), getHeight());
+    }
+
     public void limpiarFormulario() {
         txtNombre.setText("");
         txtEspecialidad.setText("");
+        mecanicoEnEdicion = null;
+        btnGuardar.setText("Registrar Mecánico");
+        btnEliminar.setEnabled(false);
         tablaMecanicos.clearSelection();
-        mecanicoEnEdicion = null; // Indica que no se esta editando.
-        btnGuardar.setText("Guardar");
-        txtNombre.setEditable(true); // El nombre es la clave, solo editable al crear.
-        txtNombre.setBackground(Color.WHITE);
     }
 
-    /**
-     * Metodo de utilidad para crear JLabels con estilo consistente.
-     * @param texto El texto del label.
-     * @return JLabel estilizado.
-     */
-    private JLabel crearLabel(String texto) {
-        JLabel label = new JLabel(texto);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(Color.WHITE);
-        return label;
+    private void style(JTextField c) {
+        c.setPreferredSize(new Dimension(300, 40));
+        c.setFont(new Font("Arial", Font.PLAIN, 16));
+        c.setBorder(BorderFactory.createLineBorder(new Color(0,120,215),1));
+    }
+
+    private BotonFuturista btn(String t, String r) {
+        BotonFuturista b = new BotonFuturista(t);
+        b.setPreferredSize(new Dimension(250, 55));
+        try {
+            File f = new File(r);
+            if(f.exists()) b.setIcon(new ImageIcon(new ImageIcon(r).getImage().getScaledInstance(28,28,4)));
+        } catch(Exception e) { e.printStackTrace(); }
+        return b;
+    }
+
+    private void cargarIconoEnLabel(JLabel l, String r, int s) {
+        try {
+            File f = new File(r);
+            if(f.exists()) l.setIcon(new ImageIcon(new ImageIcon(r).getImage().getScaledInstance(s,s,4)));
+        } catch(Exception e) { e.printStackTrace(); }
     }
 }

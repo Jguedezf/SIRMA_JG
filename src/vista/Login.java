@@ -1,15 +1,19 @@
 /*
- * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
- * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
- * Archivo: Login.java
- * Descripcion: Ventana de inicio de sesion (capa de seguridad). Valida las
- *              credenciales del usuario antes de dar acceso al sistema.
- * Fecha: Noviembre 2025
- * Version: 2.1 (Correccion de import faltante)
- * -----------------------------------------------------------------------------
+ * ============================================================================
+ * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
+ * INSTITUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
+ * ASIGNATURA:   Técnicas de Programación III - Sección 3
+ * AUTORA:       Johanna Gabriela Guedez Flores
+ * CÉDULA:       V-14.089.807
+ * DOCENTE:      Ing. Dubraska Roca
+ * ARCHIVO:      Login.java
+ * FECHA:        Diciembre 2025
+ * DESCRIPCIÓN TÉCNICA:
+ * Clase de la capa de Vista que implementa la ventana de autenticación.
+ * Utiliza un JFrame sin decoración (`undecorated`) y pintura personalizada
+ * (`paintComponent`) para lograr una interfaz de usuario moderna y única,
+ * actuando como el punto de entrada visual a la aplicación.
+ * ============================================================================
  */
 package vista;
 
@@ -17,15 +21,19 @@ import controlador.ControladorSIRMA;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException; // <--- ESTA ES LA LINEA QUE FALTABA
 import javax.imageio.ImageIO;
 
+/**
+ * Clase Login que gestiona la interfaz de inicio de sesión del sistema.
+ * PRINCIPIO POO: Herencia - Extiende de {@link JFrame} para adquirir las
+ * características y comportamientos de una ventana de aplicación.
+ */
 public class Login extends JFrame {
 
-    // --- Atributos de Componentes UI ---
+    // --- ATRIBUTOS ---
+    // PRINCIPIO POO: Encapsulamiento - Los componentes de la UI son privados
+    // para que su gestión se realice exclusivamente dentro de esta clase.
     private JTextField txtUsuario;
     private JPasswordField txtClave;
     private BotonFuturista btnEntrar;
@@ -34,105 +42,161 @@ public class Login extends JFrame {
 
     /**
      * Constructor de la ventana de Login.
+     * Se encarga de inicializar, componer y estilizar todos los elementos gráficos.
+     * PRINCIPIO POO: Composición - La interfaz se construye anidando múltiples
+     * componentes (paneles, etiquetas, botones) para formar una estructura compleja.
      */
     public Login() {
+        // --- 1. CONFIGURACIÓN DEL FRAME ---
         setTitle("Acceso Seguro - SIRMA JG");
         setSize(400, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setUndecorated(true); // Ventana sin bordes estandar de Windows/OS
+        setUndecorated(true); // Crea una ventana sin la barra de título estándar del SO.
         setLayout(new BorderLayout());
 
+        // --- 2. CARGA DE RECURSOS GRÁFICOS ---
         cargarImagenes();
 
-        // --- BARRA SUPERIOR PERSONALIZADA ---
-        JPanel panelBarra = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        panelBarra.setBackground(new Color(35, 40, 45));
-        panelBarra.add(crearBotonCierre());
+        // --- 3. BARRA SUPERIOR PERSONALIZADA ---
+        JPanel panelBarra = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        panelBarra.setOpaque(false); // Transparente para mostrar el fondo.
+
+        // Botón de cierre con pintado vectorial personalizado.
+        JButton btnCerrar = crearBotonCierreVectorial();
+        panelBarra.add(btnCerrar);
         add(panelBarra, BorderLayout.NORTH);
 
-        // --- PANEL CENTRAL CON FORMULARIO ---
-        JPanel panelContenido = new JPanel(new GridBagLayout()) {
+        // --- 4. PANEL CENTRAL CON FONDO PERSONALIZADO ---
+        // PRINCIPIO POO: Polimorfismo (Sobrescritura) - Se usa una clase anónima que
+        // hereda de JPanel para sobreescribir `paintComponent` y dibujar un fondo
+        // con imagen y un filtro de oscurecimiento.
+        JPanel panelCentral = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (imagenFondoLogin != null) {
                     g.drawImage(imagenFondoLogin, 0, 0, getWidth(), getHeight(), this);
-                    // Capa oscura para legibilidad
-                    g.setColor(new Color(0, 0, 0, 150));
+                    g.setColor(new Color(0, 0, 0, 180)); // Capa oscura semitransparente.
                     g.fillRect(0, 0, getWidth(), getHeight());
                 } else {
-                    g.setColor(new Color(35, 40, 45));
+                    g.setColor(new Color(35, 40, 45)); // Color de respaldo.
                     g.fillRect(0, 0, getWidth(), getHeight());
                 }
             }
         };
-        panelContenido.setBorder(new EmptyBorder(10, 40, 40, 40));
-        add(panelContenido, BorderLayout.CENTER);
+        panelCentral.setBorder(new EmptyBorder(20, 40, 40, 40));
+        add(panelCentral, BorderLayout.CENTER);
 
-        // --- Organizacion de componentes con GridBagLayout ---
+        // --- 5. COMPOSICIÓN DE ELEMENTOS EN EL PANEL CENTRAL ---
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
-        // Icono de candado
+        // Icono de seguridad
         JLabel lblIcono = new JLabel();
+        lblIcono.setHorizontalAlignment(SwingConstants.CENTER);
         if (imagenIconoCandado != null) {
-            Image iconoEscalado = imagenIconoCandado.getScaledInstance(120, 120, Image.SCALE_SMOOTH);
-            lblIcono.setIcon(new ImageIcon(iconoEscalado));
+            lblIcono.setIcon(new ImageIcon(imagenIconoCandado.getScaledInstance(150, 150, Image.SCALE_SMOOTH)));
         }
-        panelContenido.add(lblIcono, gbc);
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        panelCentral.add(lblIcono, gbc);
 
+        // Título
         gbc.gridy++;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         JLabel lblTitulo = new JLabel("INICIAR SESIÓN", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 26));
         lblTitulo.setForeground(Color.WHITE);
-        panelContenido.add(lblTitulo, gbc);
+        panelCentral.add(lblTitulo, gbc);
 
+        // Campo de Usuario
         gbc.gridy++;
-        JLabel lblUser = new JLabel("Usuario:");
-        lblUser.setForeground(Color.LIGHT_GRAY);
-        panelContenido.add(lblUser, gbc);
-
+        gbc.insets = new Insets(20, 10, 5, 10);
+        panelCentral.add(new JLabel("Usuario:") {{ setForeground(Color.LIGHT_GRAY); }}, gbc);
         gbc.gridy++;
+        gbc.insets = new Insets(5, 10, 10, 10);
         txtUsuario = new JTextField();
-        txtUsuario.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        txtUsuario.setHorizontalAlignment(JTextField.CENTER);
-        panelContenido.add(txtUsuario, gbc);
+        estilizarCampo(txtUsuario);
+        panelCentral.add(txtUsuario, gbc);
 
+        // Campo de Contraseña
         gbc.gridy++;
-        JLabel lblPass = new JLabel("Contraseña:");
-        lblPass.setForeground(Color.LIGHT_GRAY);
-        panelContenido.add(lblPass, gbc);
-
+        gbc.insets = new Insets(10, 10, 5, 10);
+        panelCentral.add(new JLabel("Contraseña:") {{ setForeground(Color.LIGHT_GRAY); }}, gbc);
         gbc.gridy++;
+        gbc.insets = new Insets(5, 10, 10, 10);
         txtClave = new JPasswordField();
-        txtClave.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        txtClave.setHorizontalAlignment(JTextField.CENTER);
-        panelContenido.add(txtClave, gbc);
+        estilizarCampo(txtClave);
+        panelCentral.add(txtClave, gbc);
 
-        gbc.gridy++; gbc.insets = new Insets(30, 10, 10, 10);
-        btnEntrar = new BotonFuturista("INGRESAR");
-        panelContenido.add(btnEntrar, gbc);
+        // Botón de Ingreso
+        gbc.gridy++;
+        gbc.insets = new Insets(30, 10, 10, 10);
+        btnEntrar = new BotonFuturista("INGRESAR AL SISTEMA");
+        btnEntrar.setBackground(new Color(60, 65, 70));
+        btnEntrar.setPreferredSize(new Dimension(200, 45));
+        panelCentral.add(btnEntrar, gbc);
 
-        // --- Asignacion de Eventos ---
+        // --- 6. VINCULACIÓN DE EVENTOS ---
         btnEntrar.addActionListener(e -> validarIngreso());
-        // Permite presionar Enter para ingresar
-        KeyAdapter enterListener = new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    validarIngreso();
-                }
-            }
-        };
-        txtUsuario.addKeyListener(enterListener);
-        txtClave.addKeyListener(enterListener);
     }
 
     /**
-     * Carga las imagenes para la interfaz desde la carpeta 'fondo'.
+     * Método de fábrica para crear el botón de cierre con renderizado vectorial.
+     * @return Un JButton personalizado para cerrar la ventana.
+     */
+    private JButton crearBotonCierreVectorial() {
+        JButton btnCerrar = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (getModel().isRollover()) {
+                    g2.setColor(new Color(232, 17, 35));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    g2.setColor(Color.WHITE);
+                } else {
+                    g2.setColor(new Color(200, 200, 200));
+                }
+                int size = 12;
+                int x = (getWidth() - size) / 2;
+                int y = (getHeight() - size) / 2;
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawLine(x, y, x + size, y + size);
+                g2.drawLine(x + size, y, x, y + size);
+                g2.dispose();
+            }
+        };
+        btnCerrar.setPreferredSize(new Dimension(45, 30));
+        btnCerrar.setBorderPainted(false);
+        btnCerrar.setFocusPainted(false);
+        btnCerrar.setContentAreaFilled(false);
+        btnCerrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCerrar.addActionListener(e -> System.exit(0));
+        return btnCerrar;
+    }
+
+    /**
+     * Aplica un estilo visual consistente a los campos de texto.
+     * @param campo El JTextField o JPasswordField a estilizar.
+     */
+    private void estilizarCampo(JTextField campo) {
+        campo.setFont(new Font("Arial", Font.PLAIN, 16));
+        campo.setHorizontalAlignment(JTextField.CENTER);
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 120, 215), 2),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        campo.setPreferredSize(new Dimension(200, 35));
+    }
+
+    /**
+     * Carga las imágenes de fondo e icono desde los archivos.
+     * Maneja excepciones de I/O de forma segura.
      */
     private void cargarImagenes() {
         try {
@@ -140,73 +204,52 @@ public class Login extends JFrame {
             if (f1.exists()) imagenFondoLogin = ImageIO.read(f1);
             File f2 = new File("fondo/icono_login.png");
             if (f2.exists()) imagenIconoCandado = ImageIO.read(f2);
-        } catch (IOException e) {
-            System.err.println("Error al cargar imagenes del login: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error de I/O: No se pudieron cargar los assets gráficos del login.");
         }
     }
 
     /**
      * Valida las credenciales ingresadas por el usuario.
+     * Contiene la lógica de negocio para la autenticación.
      */
     private void validarIngreso() {
-        String usuario = txtUsuario.getText();
-        String clave = new String(txtClave.getPassword());
+        // ENTRADA: Se obtienen los datos de los campos de texto.
+        String u = txtUsuario.getText();
+        String p = new String(txtClave.getPassword());
 
-        // Logica de validacion (simulada, no segura para produccion)
-        if ((usuario.equalsIgnoreCase("admin") && clave.equals("1234")) ||
-                (usuario.equalsIgnoreCase("Johanna") && clave.equals("1234"))) {
-            this.dispose(); // Cierra la ventana de login
-            abrirSistemaPrincipal(usuario); // Abre la ventana principal
+        // PROCESO: Validación de credenciales.
+        // Nota para la defensa: En un sistema real, esto se haría contra una base de datos
+        // y las contraseñas estarían encriptadas (hashed). Aquí están "hardcoded"
+        // por simplicidad para este prototipo académico.
+        if ((u.equalsIgnoreCase("admin") && p.equals("1234")) ||
+                (u.equalsIgnoreCase("Johanna") && p.equals("1234"))) {
+
+            // SALIDA (Éxito):
+            this.dispose(); // Cierra y libera los recursos de la ventana de login.
+            abrirSistema(u); // Inicia la transición a la ventana principal.
+
         } else {
-            JOptionPane.showMessageDialog(this,
-                    "Credenciales inválidas. Por favor, intente de nuevo.",
-                    "Error de Acceso",
-                    JOptionPane.ERROR_MESSAGE);
-            txtClave.setText("");
+            // SALIDA (Error): Muestra un mensaje de error.
+            JOptionPane.showMessageDialog(this, "Credenciales incorrectas.", "Error de Autenticación", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     /**
-     * Inicia la aplicacion principal (VentanaPrincipal).
-     * @param nombreUsuario El nombre del usuario para mostrar en el menu.
+     * Inicia la ventana principal de la aplicación después de una autenticación exitosa.
+     * Este método se encarga de instanciar el Controlador y la Vista Principal,
+     * inyectando la dependencia del controlador en la vista (Patrón MVC).
+     * @param usuarioLogueado El nombre del usuario que ha iniciado sesión.
      */
-    private void abrirSistemaPrincipal(String nombreUsuario) {
+    private void abrirSistema(String usuarioLogueado) {
+        // PRINCIPIO DE CONCURRENCIA: Se asegura de que la creación de la nueva
+        // ventana se ejecute en el Hilo de Despacho de Eventos (EDT) de Swing,
+        // que es la práctica correcta y segura para manejar interfaces gráficas en Java.
         SwingUtilities.invokeLater(() -> {
-            // 1. Se crea el Controlador (el cerebro)
-            ControladorSIRMA controlador = new ControladorSIRMA();
-            // 2. Se crea la Vista Principal y se le pasa el controlador
-            VentanaPrincipal vista = new VentanaPrincipal(controlador);
-            // 3. Se personaliza la vista con el nombre de usuario
-            vista.establecerUsuarioLogueado(nombreUsuario);
-            // 4. Se hace visible la ventana principal
-            vista.setVisible(true);
+            ControladorSIRMA c = new ControladorSIRMA();
+            VentanaPrincipal v = new VentanaPrincipal(c); // Inyección de dependencia (Controlador -> Vista)
+            v.establecerUsuarioLogueado(usuarioLogueado);
+            v.setVisible(true);
         });
-    }
-
-    /**
-     * Crea un boton de cierre personalizado estilo Windows.
-     * @return un JButton configurado para cerrar la aplicacion.
-     */
-    private JButton crearBotonCierre() {
-        JButton btnCerrar = new JButton("✕");
-        btnCerrar.setFont(new Font("Arial", Font.PLAIN, 18));
-        btnCerrar.setForeground(Color.WHITE);
-        btnCerrar.setPreferredSize(new Dimension(45, 30));
-        btnCerrar.setBorderPainted(false);
-        btnCerrar.setFocusPainted(false);
-        btnCerrar.setContentAreaFilled(false);
-        btnCerrar.setOpaque(true);
-        btnCerrar.setBackground(new Color(35, 40, 45));
-
-        btnCerrar.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnCerrar.setBackground(new Color(232, 17, 35)); // Rojo al pasar mouse
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnCerrar.setBackground(new Color(35, 40, 45));
-            }
-        });
-        btnCerrar.addActionListener(e -> System.exit(0));
-        return btnCerrar;
     }
 }

@@ -1,16 +1,18 @@
 /*
- * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
- * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
- * Archivo: PanelBienvenida.java
- * Descripcion: Pantalla de inicio (Dashboard Principal). Renderiza una imagen
- *              de fondo y presenta los accesos directos principales en un
- *              formato de tarjetas visualmente atractivo.
- * Fecha: Noviembre 2025
- * Version: 3.0 (Con escalado de imagen de fondo mejorado)
- * -----------------------------------------------------------------------------
+ * ============================================================================
+ * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
+ * INSTITUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
+ * ASIGNATURA:   Técnicas de Programación 3 - Sección 3
+ * AUTORA:       Johanna Gabriela Guedez Flores
+ * CÉDULA:       V-14.089.807
+ * DOCENTE:      Ing. Dubraska Roca
+ * ARCHIVO:      PanelBienvenida.java
+ * FECHA:        Diciembre 2025
+ * DESCRIPCIÓN TÉCNICA:
+ * Clase de la capa de Vista que implementa la pantalla de bienvenida principal.
+ * Utiliza pintura personalizada para renderizar un fondo de imagen escalado y
+ * botones con diseño de tarjeta, aplicando Herencia y Polimorfismo.
+ * ============================================================================
  */
 package vista;
 
@@ -20,35 +22,45 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Panel de bienvenida que sirve como dashboard principal de la aplicación.
+ * Muestra accesos directos a las funcionalidades más importantes del sistema.
+ * PRINCIPIO POO: Herencia - Extiende de {@link JPanel} para ser un componente de Swing.
+ */
 public class PanelBienvenida extends JPanel {
 
-    // --- Atributos de Componentes UI ---
+    // --- ATRIBUTOS (COMPONENTES DE UI) ---
+    // Se declaran públicos para ser accesibles desde la clase controladora de la vista (VentanaPrincipal).
     public JButton btnGestionFlota;
     public JButton btnGestionServicios;
     public JButton btnReportesCierre;
 
-    // --- Atributos Internos ---
+    // Atributo encapsulado para la imagen de fondo.
     private Image imagenFondo;
 
     /**
      * Constructor del PanelBienvenida.
+     * Se encarga de la composición y maquetación de la interfaz de bienvenida.
      */
     public PanelBienvenida() {
+        // PROCESO: Se configura el layout y se cargan los recursos gráficos.
         setLayout(new BorderLayout());
         cargarImagenFondo();
 
-        // --- Titulo Principal ---
+        // --- Título Principal ---
         JLabel lblTitulo = new JLabel("<html><center>Bienvenido al Sistema Inteligente de<br>Registro de Mantenimiento Automotriz (SIRMA JG)</center></html>", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 32));
         lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0)); // Espaciado
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0));
         add(lblTitulo, BorderLayout.NORTH);
 
-        // --- Panel de Tarjetas de Acceso Rapido ---
-        JPanel panelTarjetas = new JPanel(new GridLayout(1, 3, 40, 0)); // 1 fila, 3 cols, espaciado horizontal de 40px
-        panelTarjetas.setOpaque(false); // Transparente para ver el fondo
-        panelTarjetas.setBorder(BorderFactory.createEmptyBorder(20, 40, 200, 40)); // Margenes
+        // --- Panel de Tarjetas de Acceso Rápido ---
+        // PRINCIPIO POO: Composición - Se utiliza un JPanel para agrupar los botones.
+        JPanel panelTarjetas = new JPanel(new GridLayout(1, 3, 40, 0));
+        panelTarjetas.setOpaque(false); // Se hace transparente para que se vea la imagen de fondo del panel principal.
+        panelTarjetas.setBorder(BorderFactory.createEmptyBorder(20, 40, 200, 40));
 
+        // Se crean los botones utilizando un método de fábrica para asegurar un estilo consistente.
         btnGestionFlota = crearTarjetaBoton("Flota de Vehículos", "Ver Listado General", new Color(0, 120, 215));
         btnGestionServicios = crearTarjetaBoton("Gestión de Servicios", "Registrar / Consultar", new Color(0, 153, 51));
         btnReportesCierre = crearTarjetaBoton("Reportes y Cierre", "Exportar HTML / TXT", new Color(255, 102, 0));
@@ -61,7 +73,8 @@ public class PanelBienvenida extends JPanel {
     }
 
     /**
-     * Metodo privado para cargar la imagen de fondo.
+     * Carga la imagen de fondo desde el disco y la almacena en el atributo `imagenFondo`.
+     * Maneja de forma segura posibles errores de I/O.
      */
     private void cargarImagenFondo() {
         try {
@@ -69,7 +82,7 @@ public class PanelBienvenida extends JPanel {
             if (archivoImagen.exists()) {
                 imagenFondo = ImageIO.read(archivoImagen);
             } else {
-                System.out.println("Advertencia: No se encontro la imagen en 'fondo/fondo.png'");
+                System.out.println("Advertencia: No se encontró la imagen en 'fondo/fondo.png'");
             }
         } catch (IOException e) {
             System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
@@ -77,9 +90,11 @@ public class PanelBienvenida extends JPanel {
     }
 
     /**
-     * Sobrescritura del metodo paintComponent para dibujar el fondo.
-     * Logica de escalado "cover": La imagen se redimensiona para cubrir todo el
-     * panel sin deformarse, recortando lo que sobre. Es similar al 'background-size: cover' en CSS.
+     * Sobrescribe el método de pintado para dibujar el fondo de imagen personalizado.
+     * PRINCIPIO POO: Polimorfismo (Sobrescritura) - Se redefine el comportamiento
+     * de `paintComponent` para implementar una lógica de renderizado avanzada.
+     *
+     * @param g El contexto gráfico para dibujar.
      */
     @Override
     protected void paintComponent(Graphics g) {
@@ -87,84 +102,85 @@ public class PanelBienvenida extends JPanel {
         if (imagenFondo != null) {
             Graphics2D g2d = (Graphics2D) g;
 
+            // --- ALGORITMO DE ESCALADO DE IMAGEN "COVER" ---
+            // Este algoritmo asegura que la imagen cubra todo el panel sin deformarse,
+            // recortando los excesos si es necesario, similar a 'background-size: cover' en CSS.
             int panelAncho = getWidth();
             int panelAlto = getHeight();
             int imgAncho = imagenFondo.getWidth(this);
             int imgAlto = imagenFondo.getHeight(this);
 
-            // Calcular la relacion de aspecto del panel y de la imagen
             double relacionAspectoPanel = (double) panelAncho / panelAlto;
             double relacionAspectoImg = (double) imgAncho / imgAlto;
 
             int nuevoAncho, nuevoAlto, x, y;
 
             if (relacionAspectoPanel > relacionAspectoImg) {
-                // El panel es mas ancho que la imagen: la altura de la imagen debe coincidir con la del panel
                 nuevoAncho = panelAncho;
                 nuevoAlto = (int) (panelAncho / relacionAspectoImg);
                 x = 0;
-                y = (panelAlto - nuevoAlto) / 2; // Centrar verticalmente
+                y = (panelAlto - nuevoAlto) / 2; // Centrado vertical.
             } else {
-                // El panel es mas alto (o igual) que la imagen: el ancho de la imagen debe coincidir
                 nuevoAncho = (int) (panelAlto * relacionAspectoImg);
                 nuevoAlto = panelAlto;
-                x = (panelAncho - nuevoAncho) / 2; // Centrar horizontalmente
+                x = (panelAncho - nuevoAncho) / 2; // Centrado horizontal.
                 y = 0;
             }
 
-            // Activar interpolacion para que no se pixele al redimensionar
+            // Se activa la interpolación bilineal para un redimensionado de alta calidad.
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            // Dibujar la imagen escalada y centrada
             g2d.drawImage(imagenFondo, x, y, nuevoAncho, nuevoAlto, this);
 
-            // Capa oscura semitransparente para mejorar legibilidad del texto
+            // Se aplica una capa oscura semitransparente para mejorar la legibilidad del texto.
             g2d.setColor(new Color(0, 0, 0, 120));
             g2d.fillRect(0, 0, panelAncho, panelAlto);
-
         } else {
-            // Color de respaldo si no hay imagen
+            // Si la imagen no se pudo cargar, se dibuja un color de fondo sólido.
             g.setColor(new Color(45, 50, 55));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 
     /**
-     * Metodo de fabrica para crear los botones con estilo de tarjeta.
+     * Método de Fábrica (Factory Method) para crear los botones con estilo de tarjeta.
+     * Encapsula la lógica de creación y estilización de un componente complejo.
+     *
      * @param titulo Texto principal de la tarjeta.
      * @param subtitulo Texto secundario.
      * @param colorBorde Color de la barra lateral decorativa.
-     * @return un objeto JButton con el estilo personalizado.
+     * @return un {@link JButton} con el estilo de tarjeta personalizado.
      */
     private JButton crearTarjetaBoton(String titulo, String subtitulo, Color colorBorde) {
-        // Se crea un JButton anonimo para sobrescribir su paintComponent
+        // Se utiliza una clase anónima que hereda de JButton para aplicar
+        // Polimorfismo y sobreescribir su método de pintado.
         JButton tarjeta = new JButton() {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Fondo de la tarjeta (cambia de color con el hover)
-                if (getModel().isRollover()) {
-                    g2d.setColor(new Color(65, 70, 75, 230));
-                } else {
-                    g2d.setColor(new Color(45, 45, 45, 200));
-                }
+                // Lógica de estado: el fondo cambia de color al pasar el ratón por encima (hover).
+                Color colorFondo = getModel().isRollover() ? new Color(65, 70, 75, 230) : new Color(45, 45, 45, 200);
+                g2d.setColor(colorFondo);
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
 
-                // Barra lateral de color
+                // Barra lateral decorativa.
                 g2d.setColor(colorBorde);
-                g2d.fillRoundRect(0, 0, 10, getHeight(), 10, 10); // Solo redondea las esquinas izquierdas
+                g2d.fillRoundRect(0, 0, 10, getHeight(), 10, 10);
 
-                super.paintComponent(g); // Dibuja el texto
+                // Llama al método padre para que dibuje el texto del botón encima de nuestro fondo.
+                super.paintComponent(g);
             }
         };
 
+        // Configuración de propiedades del botón.
         tarjeta.setLayout(new GridLayout(2, 1));
         tarjeta.setBorderPainted(false);
         tarjeta.setFocusPainted(false);
-        tarjeta.setContentAreaFilled(false);
+        tarjeta.setContentAreaFilled(false); // Crucial para que nuestro pintado personalizado funcione.
         tarjeta.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        // Creación y estilización de las etiquetas de texto internas.
         JLabel lblTituloTarjeta = new JLabel(titulo, SwingConstants.CENTER);
         lblTituloTarjeta.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTituloTarjeta.setForeground(Color.WHITE);

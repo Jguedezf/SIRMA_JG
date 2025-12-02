@@ -1,15 +1,19 @@
 /*
- * -----------------------------------------------------------------------------
- * Autora: Johanna Guedez - V14089807
- * Profesora: Ing. Dubraska Roca
- * Descripcion del Programa: Registro de mantenimiento de vehiculo (SIRMA JG)
- *
- * Archivo: PanelGestionVehiculos.java
- * Descripcion: Modulo de interfaz de usuario (UI) para la gestion CRUD de la
- *              flota de vehiculos.
- * Fecha: Noviembre 2025
- * Version: 8.1 (Correccion de titulo y carga de placa)
- * -----------------------------------------------------------------------------
+ * ============================================================================
+ * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
+ * INSTITUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
+ * ASIGNATURA:   Técnicas de Programación 3 - Sección 3
+ * AUTORA:       Johanna Gabriela Guedez Flores
+ * CÉDULA:       V-14.089.807
+ * DOCENTE:      Ing. Dubraska Roca
+ * ARCHIVO:      PanelGestionVehiculos.java
+ * FECHA:        Diciembre 2025
+ * DESCRIPCIÓN TÉCNICA:
+ * Módulo de Vista para la administración de la entidad 'Vehiculo'. Implementa
+ * una interfaz de tipo Maestro-Detalle para las operaciones CRUD, combinando
+ * un formulario de entrada de datos, una tabla de visualización y una botonera
+ * de acciones con carga dinámica de recursos gráficos.
+ * ============================================================================
  */
 package vista;
 
@@ -20,167 +24,259 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.event.*;
+import java.io.File;
+import javax.imageio.ImageIO;
 
+/**
+ * Panel que proporciona la interfaz gráfica para las operaciones CRUD sobre la flota vehicular.
+ * PRINCIPIO POO: Herencia - Extiende de {@link JPanel}.
+ */
 public class PanelGestionVehiculos extends JPanel {
 
+    // --- ATRIBUTOS DE UI (Públicos para acceso desde VentanaPrincipal) ---
     public JTextField txtPlaca, txtMarca, txtModelo, txtAnio, txtColor;
-    public JTextField txtNombrePropietario, txtCedulaPropietario, txtTelefonoPropietario;
-    public BotonFuturista btnGuardar, btnLimpiar, btnEliminar;
+    public JTextField txtNombrePropietario, txtCedulaPropietario, txtTelefonoPropietario, txtDireccion;
     public JTable tablaVehiculos;
     public DefaultTableModel modeloTabla;
-    public Vehiculo vehiculoEnEdicion;
+    public BotonFuturista btnGuardar, btnLimpiar, btnEliminar;
+    public Vehiculo vehiculoEnEdicion = null;
 
+    // --- ATRIBUTOS INTERNOS ---
+    private JLabel lblLogoMarca;
+    private int filaHover = -1;
+    private Image imagenFondo;
+
+    /**
+     * Constructor del panel de gestión de vehículos.
+     * Construye la compleja interfaz gráfica anidando múltiples paneles y layouts.
+     * PRINCIPIO POO: Composición - La UI se ensambla a partir de componentes más simples.
+     */
     public PanelGestionVehiculos() {
-        setBackground(new Color(45, 50, 55));
-        setLayout(new BorderLayout(20, 20));
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        try {
+            imagenFondo = ImageIO.read(new File("fondo/fondo.png"));
+        } catch(Exception e){ e.printStackTrace(); }
 
-        // <<-- CAMBIO: Titulo principal actualizado -->>
-        JLabel lblTitulo = new JLabel("Registro de Vehículos para Mantenimiento", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        setLayout(new BorderLayout(10, 10));
+        setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        // --- 1. ENCABEZADO ---
+        JPanel pNorte = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        pNorte.setOpaque(false);
+        JLabel lblTitulo = new JLabel("Registro de Vehículos para Mantenimiento");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 32));
         lblTitulo.setForeground(Color.WHITE);
-        add(lblTitulo, BorderLayout.NORTH);
+        pNorte.add(lblTitulo);
+        add(pNorte, BorderLayout.NORTH);
 
-        JPanel panelCentral = new JPanel(new BorderLayout(10, 20));
-        panelCentral.setOpaque(false);
-        panelCentral.add(crearPanelFormulario(), BorderLayout.NORTH);
-        panelCentral.add(crearPanelTabla(), BorderLayout.CENTER);
+        // --- 2. ÁREA CENTRAL (Formulario + Tabla) ---
+        JPanel pCentro = new JPanel(new BorderLayout(0, 15));
+        pCentro.setOpaque(false);
+        JPanel pFormularioContenedor = new JPanel(new BorderLayout(10, 0));
+        pFormularioContenedor.setOpaque(false);
 
-        add(panelCentral, BorderLayout.CENTER);
-    }
-
-    private JPanel crearPanelFormulario() {
-        JPanel panelFormulario = new JPanel(new GridBagLayout());
-        panelFormulario.setOpaque(false);
-        // <<-- CAMBIO: Titulo del borde actualizado -->>
-        panelFormulario.setBorder(BorderFactory.createTitledBorder(
-                null, "Datos del Vehículo y Propietario", TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 16), Color.WHITE));
-
+        JPanel pInputs = new JPanel(new GridBagLayout());
+        pInputs.setOpaque(false);
+        TitledBorder borde = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.WHITE), "Ficha Técnica del Vehículo");
+        borde.setTitleColor(Color.WHITE);
+        borde.setTitleFont(new Font("Arial", Font.BOLD, 14));
+        pInputs.setBorder(borde);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(8, 10, 8, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridy = 0;
-        gbc.gridx = 0; panelFormulario.add(crearLabel("Placa:"), gbc);
-        gbc.gridx = 1; txtPlaca = new JTextField(10); panelFormulario.add(txtPlaca, gbc);
-        gbc.gridx = 2; panelFormulario.add(crearLabel("Marca:"), gbc);
-        gbc.gridx = 3; txtMarca = new JTextField(15); panelFormulario.add(txtMarca, gbc);
-        gbc.gridx = 4; panelFormulario.add(crearLabel("Modelo:"), gbc);
-        gbc.gridx = 5; txtModelo = new JTextField(15); panelFormulario.add(txtModelo, gbc);
+        addCampo(pInputs, "Placa:", txtPlaca = new JTextField(12), 0, 0, gbc);
+        addCampo(pInputs, "Marca:", txtMarca = new JTextField(12), 2, 0, gbc);
+        txtMarca.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) { actualizarLogoMarca(txtMarca.getText()); }
+        });
 
-        gbc.gridy = 1;
-        gbc.gridx = 0; panelFormulario.add(crearLabel("Año:"), gbc);
-        gbc.gridx = 1; txtAnio = new JTextField(10); panelFormulario.add(txtAnio, gbc);
-        gbc.gridx = 2; panelFormulario.add(crearLabel("Color:"), gbc);
-        gbc.gridx = 3; txtColor = new JTextField(15); panelFormulario.add(txtColor, gbc);
+        addCampo(pInputs, "Modelo:", txtModelo = new JTextField(12), 0, 1, gbc);
+        addCampo(pInputs, "Año:", txtAnio = new JTextField(12), 2, 1, gbc);
+        addCampo(pInputs, "Color:", txtColor = new JTextField(12), 0, 2, gbc);
+        JSeparator sep = new JSeparator(); gbc.gridx=0; gbc.gridy=3; gbc.gridwidth=4; pInputs.add(sep, gbc);
+        gbc.gridwidth=1; gbc.gridx = 0; gbc.gridy = 4;
+        pInputs.add(new JLabel("Propietario:") {{ setForeground(Color.WHITE); setFont(new Font("Arial", Font.BOLD, 14)); }}, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3;
+        txtNombrePropietario = new JTextField(); estilizarCampo(txtNombrePropietario);
+        pInputs.add(txtNombrePropietario, gbc);
+        gbc.gridwidth = 1;
+        addCampo(pInputs, "Cédula:", txtCedulaPropietario = new JTextField(12), 0, 5, gbc);
+        addCampo(pInputs, "Teléfono:", txtTelefonoPropietario = new JTextField(12), 2, 5, gbc);
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 1;
+        pInputs.add(new JLabel("Dirección:") {{ setForeground(Color.WHITE); setFont(new Font("Arial", Font.BOLD, 14)); }}, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3;
+        txtDireccion = new JTextField(); estilizarCampo(txtDireccion);
+        pInputs.add(txtDireccion, gbc);
+        pFormularioContenedor.add(pInputs, BorderLayout.CENTER);
 
-        gbc.gridy = 2; gbc.gridx = 0; gbc.gridwidth = 6; gbc.insets = new Insets(10, 0, 5, 0);
-        panelFormulario.add(new JSeparator(), gbc);
-        gbc.insets = new Insets(5, 10, 5, 10); gbc.gridwidth = 1;
-
-        gbc.gridy = 3;
-        gbc.gridx = 0; panelFormulario.add(crearLabel("Propietario:"), gbc);
-        gbc.gridx = 1; txtNombrePropietario = new JTextField(10); panelFormulario.add(txtNombrePropietario, gbc);
-        gbc.gridx = 2; panelFormulario.add(crearLabel("Cédula:"), gbc);
-        gbc.gridx = 3; txtCedulaPropietario = new JTextField(15); panelFormulario.add(txtCedulaPropietario, gbc);
-        gbc.gridx = 4; panelFormulario.add(crearLabel("Teléfono:"), gbc);
-        gbc.gridx = 5; txtTelefonoPropietario = new JTextField(15); panelFormulario.add(txtTelefonoPropietario, gbc);
-
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 15));
-        panelBotones.setOpaque(false);
-        btnGuardar = new BotonFuturista("Guardar");
-        btnLimpiar = new BotonFuturista("Limpiar Formulario");
-        panelBotones.add(btnGuardar);
-        panelBotones.add(btnLimpiar);
-        gbc.gridy = 4; gbc.gridx = 0; gbc.gridwidth = 6;
-        panelFormulario.add(panelBotones, gbc);
-
-        return panelFormulario;
-    }
-
-    private JPanel crearPanelTabla() {
-        JPanel panelTabla = new JPanel(new BorderLayout(10, 10));
-        panelTabla.setOpaque(false);
-        // <<-- CAMBIO: Titulo de la tabla actualizado -->>
-        panelTabla.setBorder(BorderFactory.createTitledBorder(null, "Flota de Vehículos Registrados", TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 16), Color.WHITE));
+        JPanel pLateral = new JPanel();
+        pLateral.setOpaque(false);
+        pLateral.setLayout(new BoxLayout(pLateral, BoxLayout.Y_AXIS));
+        pLateral.setBorder(new EmptyBorder(10, 10, 0, 0));
+        lblLogoMarca = new JLabel();
+        lblLogoMarca.setPreferredSize(new Dimension(100, 100));
+        lblLogoMarca.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnGuardar = crearBoton("GUARDAR", "fondo/icono_guardar.png");
+        btnLimpiar = crearBoton("LIMPIAR", "fondo/limpiar_formulario.png");
+        pLateral.add(lblLogoMarca);
+        pLateral.add(Box.createVerticalStrut(20));
+        pLateral.add(btnGuardar);
+        pLateral.add(Box.createVerticalStrut(15));
+        pLateral.add(btnLimpiar);
+        pFormularioContenedor.add(pLateral, BorderLayout.EAST);
+        pCentro.add(pFormularioContenedor, BorderLayout.NORTH);
 
         modeloTabla = new DefaultTableModel(new String[]{"Placa", "Marca", "Modelo", "Año", "Propietario"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int r, int c){return false;}
         };
-        tablaVehiculos = new JTable(modeloTabla);
-        tablaVehiculos.setRowHeight(36);
-        tablaVehiculos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tablaVehiculos.getColumnModel().getColumn(1).setCellRenderer(new LogoMarcaRenderer());
 
-        panelTabla.add(new JScrollPane(tablaVehiculos), BorderLayout.CENTER);
-
-        btnEliminar = new BotonFuturista("Eliminar Seleccionado");
-        btnEliminar.setEnabled(false);
-        JPanel panelSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelSur.setOpaque(false);
-        panelSur.add(btnEliminar);
-        panelTabla.add(panelSur, BorderLayout.SOUTH);
-
-        return panelTabla;
-    }
-
-    public void limpiarFormulario() {
-        vehiculoEnEdicion = null;
-        txtPlaca.setText("");
-        txtPlaca.setEditable(true);
-        txtPlaca.setBackground(Color.WHITE);
-        txtMarca.setText("");
-        txtModelo.setText("");
-        txtAnio.setText("");
-        txtColor.setText("");
-        txtNombrePropietario.setText("");
-        txtCedulaPropietario.setText("");
-        txtTelefonoPropietario.setText("");
-        tablaVehiculos.clearSelection();
-        btnGuardar.setText("Guardar");
-    }
-
-    private JLabel crearLabel(String texto) {
-        JLabel label = new JLabel(texto);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(Color.WHITE);
-        return label;
-    }
-
-    private static class LogoMarcaRenderer extends DefaultTableCellRenderer {
-        private final Map<String, ImageIcon> cacheDeIconos = new HashMap<>();
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            String marca = (value == null) ? "" : value.toString().toLowerCase().trim();
-
-            if (!cacheDeIconos.containsKey(marca)) {
-                ImageIcon icon = new ImageIcon("fondo/" + marca + ".png");
-                if (icon.getImage().getWidth(null) > 0) {
-                    Image img = icon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-                    cacheDeIconos.put(marca, new ImageIcon(img));
-                } else {
-                    cacheDeIconos.put(marca, null);
+        tablaVehiculos = new JTable(modeloTabla) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                if (!isRowSelected(row)) {
+                    c.setBackground(row == filaHover ? new Color(200, 230, 255) : Color.WHITE);
                 }
+                return c;
             }
+        };
 
-            ImageIcon iconoEnCache = cacheDeIconos.get(marca);
-            if (iconoEnCache != null) {
-                label.setIcon(iconoEnCache);
-                label.setText(" " + value.toString());
-                label.setIconTextGap(15);
-            } else {
-                label.setIcon(null);
-                label.setText(value.toString());
+        tablaVehiculos.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int nuevaFila = tablaVehiculos.rowAtPoint(e.getPoint());
+                if (nuevaFila != filaHover) { filaHover = nuevaFila; tablaVehiculos.repaint(); }
             }
+        });
 
-            return label;
+        tablaVehiculos.setRowHeight(30);
+        tablaVehiculos.setFont(new Font("Arial", Font.PLAIN, 14));
+        tablaVehiculos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        tablaVehiculos.getColumnModel().getColumn(1).setCellRenderer(new RenderizadorMarca());
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        tablaVehiculos.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        tablaVehiculos.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
+        JScrollPane scroll = new JScrollPane(tablaVehiculos);
+        scroll.getViewport().setBackground(Color.WHITE);
+        scroll.setPreferredSize(new Dimension(0, 155));
+        pCentro.add(scroll, BorderLayout.CENTER);
+        add(pCentro, BorderLayout.CENTER);
+
+        JPanel pSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pSur.setOpaque(false);
+        btnEliminar = new BotonFuturista("Eliminar Vehículo Seleccionado");
+        btnEliminar.setBackground(new Color(150, 50, 50));
+        btnEliminar.setIcon(cargarIconoBtn("fondo/icono_eliminar.png", 24));
+        btnEliminar.setPreferredSize(new Dimension(280, 45));
+        btnEliminar.setIconTextGap(15);
+        btnEliminar.setEnabled(false);
+        pSur.add(btnEliminar);
+        add(pSur, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Sobrescribe el método de pintado para dibujar el fondo de imagen personalizado.
+     */
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if(imagenFondo != null) {
+            g.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
+            g.setColor(new Color(0, 0, 0, 200));
+            g.fillRect(0, 0, getWidth(), getHeight());
+        } else {
+            g.setColor(new Color(45, 50, 55));
+            g.fillRect(0, 0, getWidth(), getHeight());
         }
+    }
+
+    // =========================================================================
+    // MÉTODOS DE FÁBRICA Y UTILIDAD (HELPERS)
+    // =========================================================================
+
+    private void addCampo(JPanel p, String lblText, JTextField txt, int x, int y, GridBagConstraints gbc) {
+        gbc.gridx = x; gbc.gridy = y; gbc.gridwidth = 1;
+        JLabel l = new JLabel(lblText);
+        l.setFont(new Font("Arial", Font.BOLD, 14));
+        l.setForeground(Color.WHITE);
+        p.add(l, gbc);
+
+        gbc.gridx = x + 1;
+        estilizarCampo(txt);
+        p.add(txt, gbc);
+    }
+
+    private void estilizarCampo(JTextField txt) {
+        txt.setBackground(Color.WHITE);
+        txt.setForeground(Color.BLACK);
+        txt.setCaretColor(Color.BLACK);
+        txt.setFont(new Font("Arial", Font.PLAIN, 14));
+        txt.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100)),
+                BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        ));
+        txt.setPreferredSize(new Dimension(150, 30));
+    }
+
+    private BotonFuturista crearBoton(String t, String r) {
+        BotonFuturista b = new BotonFuturista(t);
+        Dimension buttonSize = new Dimension(230, 65);
+        b.setPreferredSize(buttonSize);
+        b.setMinimumSize(buttonSize);
+        b.setMaximumSize(buttonSize);
+        b.setAlignmentX(Component.CENTER_ALIGNMENT);
+        b.setIconTextGap(15);
+        try{
+            File f=new File(r);
+            if(f.exists()) {
+                b.setIcon(new ImageIcon(new ImageIcon(r).getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)));
+            }
+        }catch(Exception e){ e.printStackTrace(); }
+        return b;
+    }
+
+    private void actualizarLogoMarca(String marca) {
+        if (marca == null || marca.isEmpty()) { lblLogoMarca.setIcon(null); return; }
+        String ruta = "fondo/" + marca.toLowerCase().trim() + ".png";
+        cargarImagenEnLabel(lblLogoMarca, ruta, 90, 90);
+    }
+
+    private void cargarImagenEnLabel(JLabel l, String ruta, int w, int h) {
+        try {
+            File f = new File(ruta);
+            if (f.exists()) {
+                ImageIcon icon = new ImageIcon(new ImageIcon(f.getPath()).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+                l.setIcon(icon);
+            } else {
+                l.setIcon(null);
+            }
+        } catch(Exception e) { l.setIcon(null); e.printStackTrace(); }
+    }
+
+    private ImageIcon cargarIconoBtn(String ruta, int size) {
+        try {
+            return new ImageIcon(new ImageIcon(ruta).getImage().getScaledInstance(size,size,Image.SCALE_SMOOTH));
+        } catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Resetea todos los campos del formulario a su estado inicial.
+     */
+    public void limpiarFormulario() {
+        txtPlaca.setText(""); txtPlaca.setEditable(true);
+        txtMarca.setText(""); txtModelo.setText(""); txtAnio.setText(""); txtColor.setText("");
+        txtNombrePropietario.setText(""); txtCedulaPropietario.setText(""); txtTelefonoPropietario.setText(""); txtDireccion.setText("");
+        lblLogoMarca.setIcon(null);
+        vehiculoEnEdicion = null;
+        if(btnGuardar instanceof JButton) btnGuardar.setText("GUARDAR");
+        btnEliminar.setEnabled(false);
+        tablaVehiculos.clearSelection();
     }
 }
