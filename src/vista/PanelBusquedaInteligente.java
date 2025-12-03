@@ -2,17 +2,22 @@
  * ============================================================================
  * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
  * INSTITUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
- * ASIGNATURA:   Técnicas de Programación 3 - Sección 3
+ * ASIGNATURA:   Técnicas de Programación III - Sección 3
  * AUTORA:       Johanna Gabriela Guedez Flores
  * CÉDULA:       V-14.089.807
  * DOCENTE:      Ing. Dubraska Roca
  * ARCHIVO:      PanelBusquedaInteligente.java
  * FECHA:        Diciembre 2025
- * DESCRIPCIÓN TÉCNICA:
- * Clase de la capa de Vista que implementa la interfaz de consultas avanzadas.
- * Permite al usuario filtrar las órdenes de servicio por múltiples criterios
- * (texto, estado, rango de fechas) e interactúa directamente con el Controlador
- * para obtener y mostrar los resultados.
+ *
+ * DESCRIPCIÓN TÉCNICA DEL MÓDULO:
+ * Clase de la capa de Vista (View) responsable de la interfaz de Consultas Avanzadas.
+ * Implementa un patrón de diseño de 'Filtro Compuesto', permitiendo al usuario
+ * refinar el conjunto de datos mediante criterios acumulativos (Texto, Estado, Fecha).
+ *
+ * ESTRUCTURA ALGORÍTMICA:
+ * - ENTRADA: Criterios seleccionados por el usuario en los componentes GUI.
+ * - PROCESO: Delegación de la lógica de filtrado al Controlador (Patrón MVC).
+ * - SALIDA: Actualización dinámica del modelo de datos de la JTable (Data Binding).
  * ============================================================================
  */
 package vista;
@@ -25,92 +30,123 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import javax.imageio.ImageIO;
 
 /**
- * Panel que contiene el formulario de búsqueda avanzada y la tabla de resultados.
- * PRINCIPIO POO: Herencia - Extiende de {@link JPanel}.
- * PRINCIPIO POO: Composición - Se construye anidando múltiples paneles y componentes.
+ * PanelBusquedaInteligente: Vista especializada para la minería y filtrado de datos.
+ * PRINCIPIO POO: Herencia - Extiende de {@link JPanel} para integrarse en el contenedor principal.
  */
 public class PanelBusquedaInteligente extends JPanel {
 
-    // --- ATRIBUTOS DE UI (Públicos para acceso desde VentanaPrincipal) ---
-    public JTextField txtBusqueda;
-    public JComboBox<String> cmbEstado;
-    public JDateChooser dccDesde, dccHasta;
-    public JTable tablaResultados;
-    public DefaultTableModel modeloTabla;
-    public JLabel lblTotalResultados;
+    // ========================================================================
+    // 1. ATRIBUTOS Y COMPONENTES DE INTERFAZ (ENCAPSULAMIENTO DE UI)
+    // ========================================================================
+
+    // Componentes de Entrada de Datos (Inputs)
+    public JTextField txtBusqueda;          // Entrada para criterios textuales (Placa/ID)
+    public JComboBox<String> cmbEstado;     // Selector categórico de estado
+    public JDateChooser dccDesde, dccHasta; // Selectores de rango temporal
+
+    // Componentes de Visualización (Outputs)
+    public JTable tablaResultados;          // Grilla de datos
+    public DefaultTableModel modeloTabla;   // Modelo de datos subyacente
+    public JLabel lblTotalResultados;       // Feedback cuantitativo
+
+    // Componentes de Control (Acciones)
     public JButton btnBuscar, btnLimpiar;
     public BotonFuturista btnAccionEditar, btnAccionEliminar, btnAccionNuevaOrden;
 
-    // --- ATRIBUTOS INTERNOS ---
-    private Image imagenFondo;
-    // La referencia al controlador se elimina como atributo ya que no se usa internamente.
+    // Recursos Gráficos
+    private Image imagenFondoBusqueda;
 
     /**
-     * Constructor del panel de búsqueda.
-     * Recibe una instancia del controlador, aunque no la utiliza internamente,
-     * la comunicación se gestiona desde la clase contenedora (VentanaPrincipal).
+     * CONSTRUCTOR: Inicializa el ciclo de vida del panel.
+     * FASES:
+     * 1. Carga de Recursos (Imágenes).
+     * 2. Configuración del Layout Manager (Gestión espacial).
+     * 3. Instanciación y composición de componentes (Factory Pattern).
+     * 4. Inyección de dependencias y listeners.
      *
-     * @param controlador La instancia del controlador principal de la aplicación.
+     * @param controlador Referencia al controlador para operaciones lógicas (no usado directamente en constructor, pero disponible).
      */
     public PanelBusquedaInteligente(ControladorSIRMA controlador) {
-        // Carga de Imagen de Fondo.
+        // --- FASE 1: CARGA DE RECURSOS (Manejo de Excepciones I/O) ---
         try {
-            File f = new File("fondo/fondo.png");
-            if(f.exists()) imagenFondo = ImageIO.read(f);
-        } catch(Exception e){ e.printStackTrace(); }
+            File f = new File("fondo/fondo2.png");
+            // Validación de existencia del recurso para evitar NullPointerException
+            if(f.exists()) {
+                imagenFondoBusqueda = ImageIO.read(f);
+            } else {
+                imagenFondoBusqueda = ImageIO.read(new File("fondo/fondo.png")); // Fallback
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+            setBackground(new Color(45, 50, 55)); // Color de seguridad en caso de error gráfico
+        }
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(new EmptyBorder(10, 30, 10, 30));
+        // --- FASE 2: MAQUETACIÓN (LAYOUT) ---
+        setLayout(new BorderLayout(10, 10)); // Espaciado H, V
+        setBorder(new EmptyBorder(10, 30, 10, 30)); // Márgenes internos (Padding)
 
-        // --- 1. SECCIÓN NORTE: FORMULARIO DE FILTROS ---
+        // --- FASE 3: CONSTRUCCIÓN DE LA INTERFAZ ---
+
+        // A. SECCIÓN NORTE: FORMULARIO DE FILTROS
+        // Se utiliza GridBagLayout para un control preciso de la alineación de filtros.
         JPanel panelNorte = new JPanel(new GridBagLayout());
         panelNorte.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 10, 5, 10);
 
+        // Título del Módulo
         JLabel lblTitulo = new JLabel("Búsqueda Inteligente", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 36));
         lblTitulo.setForeground(Color.WHITE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 3;
         panelNorte.add(lblTitulo, gbc);
 
-        // Fila 1: Buscador principal de texto.
+        // Fila 1: Buscador Principal (Texto + Botones Acción)
         gbc.gridy = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         JPanel pBuscador = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         pBuscador.setOpaque(false);
+
         pBuscador.add(crearLabel("Placa / Orden:", SwingConstants.RIGHT));
-        txtBusqueda = new JTextField(); estilizarCampo(txtBusqueda);
+
+        // Instanciación del campo de texto con estilos personalizados
+        txtBusqueda = new JTextField();
+        estilizarCampo(txtBusqueda);
         txtBusqueda.setFont(new Font("Arial", Font.BOLD, 20));
         txtBusqueda.setPreferredSize(new Dimension(250, 45));
         pBuscador.add(txtBusqueda);
-        btnBuscar = crearBotonIcono("Buscar", "fondo/icono_lupa.png");
-        btnLimpiar = crearBotonIcono("Limpiar", "fondo/limpiar_formulario.png");
+
+        // Creación de Botones mediante Métodos de Fábrica (Code Reuse)
+        btnBuscar = crearBotonIcono("Buscar", "fondo/icono_lupa.png", 64);
+        btnLimpiar = crearBotonIcono("Limpiar", "fondo/limpiar_formulario.png", 64);
+
         pBuscador.add(btnBuscar);
         pBuscador.add(btnLimpiar);
         panelNorte.add(pBuscador, gbc);
 
-        // Fila 2: Filtros secundarios (Estado y Fechas).
+        // Fila 2: Filtros Secundarios (Estado y Fechas)
         gbc.gridy = 2;
         JPanel pSecundario = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         pSecundario.setOpaque(false);
         pSecundario.setBorder(new EmptyBorder(15, 0, 0, 0));
 
-        // Filtro de Estado
+        // Filtro Categórico (ComboBox)
         pSecundario.add(crearLabel("Estado:", SwingConstants.RIGHT));
         cmbEstado = new JComboBox<>(new String[]{"Todos", "Pendiente", "En Proceso", "Finalizado"});
         cmbEstado.setPreferredSize(new Dimension(140, 35));
         pSecundario.add(cmbEstado);
 
-        // Filtro de Fechas con JCalendar
+        // Filtros de Rango (DateChoosers)
         pSecundario.add(crearLabel("Desde:", SwingConstants.RIGHT));
         dccDesde = new JDateChooser(); estilizarCalendario(dccDesde);
         pSecundario.add(dccDesde);
+
         pSecundario.add(crearLabel("Hasta:", SwingConstants.RIGHT));
         dccHasta = new JDateChooser(); estilizarCalendario(dccHasta);
         pSecundario.add(dccHasta);
@@ -118,65 +154,92 @@ public class PanelBusquedaInteligente extends JPanel {
         panelNorte.add(pSecundario, gbc);
         add(panelNorte, BorderLayout.NORTH);
 
-        // --- 2. SECCIÓN CENTRAL: TABLA DE RESULTADOS ---
+        // B. SECCIÓN CENTRAL: TABLA DE RESULTADOS (VISUALIZACIÓN)
         String[] cols = {"ID Orden", "Fecha", "Placa", "Marca", "Servicio", "Estado", "Total ($)"};
+
+        // Polimorfismo: Clase anónima para sobrescribir `isCellEditable` y hacer la tabla de solo lectura.
         modeloTabla = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
+
         tablaResultados = new JTable(modeloTabla);
         tablaResultados.setRowHeight(30);
         tablaResultados.setFont(new Font("Arial", Font.PLAIN, 14));
-        tablaResultados.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
 
-        // Aplicación de renderizadores personalizados.
+        // --- ESTILIZADO DE ENCABEZADO (Identidad Corporativa) ---
+        JTableHeader header = tablaResultados.getTableHeader();
+        header.setFont(new Font("Arial", Font.BOLD, 14));
+        header.setBackground(new Color(255, 204, 0)); // Amarillo SIRMA
+        header.setForeground(Color.BLACK);
+        header.setOpaque(true);
+
+        // Inyección de Renderizadores (Visualización personalizada de celdas)
         tablaResultados.getColumnModel().getColumn(3).setCellRenderer(new RenderizadorMarca());
         tablaResultados.getColumnModel().getColumn(5).setCellRenderer(new RenderizadorEstadoOrden());
-        configurarAlineacionTabla();
+        configurarAlineacionTabla(); // Método auxiliar para alinear celdas
 
+        // Configuración del ScrollPane
         JScrollPane scroll = new JScrollPane(tablaResultados);
         scroll.getViewport().setBackground(Color.WHITE);
-        TitledBorder bordeTitulo = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.WHITE), "Resultados de la Búsqueda");
-        bordeTitulo.setTitleColor(Color.WHITE);
+
+        // AJUSTE DE DIMENSIONES VISUALES:
+        // Altura fijada en 332px para mostrar 10 filas exactas + encabezado.
+        // Esto evita que la fila 11 se vea "cortada" visualmente.
+        scroll.setPreferredSize(new Dimension(0, 332));
+
+        // Borde con Título
+        TitledBorder bordeTitulo = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Resultados de la Búsqueda");
+        bordeTitulo.setTitleColor(Color.BLACK);
         bordeTitulo.setTitleFont(new Font("Arial", Font.BOLD, 14));
         scroll.setBorder(bordeTitulo);
+
         add(scroll, BorderLayout.CENTER);
 
-        // --- 3. SECCIÓN SUR: ACCIONES CONTEXTUALES Y TOTALES ---
+        // C. SECCIÓN SUR: ACCIONES CONTEXTUALES
         JPanel panelSur = new JPanel(new BorderLayout());
         panelSur.setOpaque(false);
-        lblTotalResultados = new JLabel("Listo...", SwingConstants.RIGHT);
-        lblTotalResultados.setForeground(Color.CYAN);
+
+        // Feedback al usuario (Conteo de registros)
+        lblTotalResultados = new JLabel("Listo para buscar...", SwingConstants.RIGHT);
+        lblTotalResultados.setForeground(Color.CYAN); // Contraste alto sobre fondo oscuro
         lblTotalResultados.setBorder(new EmptyBorder(5,0,5,10));
         panelSur.add(lblTotalResultados, BorderLayout.NORTH);
 
         JPanel pAcc = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         pAcc.setOpaque(false);
         Dimension d = new Dimension(280, 50);
+
+        // Botones de acción sobre el registro seleccionado
         btnAccionEditar = crearBtnAcc("Editar / Ver Detalle", "fondo/icono_editar.png", null, d);
         btnAccionEliminar = crearBtnAcc("Eliminar Orden", "fondo/icono_eliminar.png", new Color(150,50,50), d);
         btnAccionNuevaOrden = crearBtnAcc("Nueva Orden de Servicio", "fondo/icono_agregar.png", new Color(40,167,69), d);
+
         pAcc.add(btnAccionEditar); pAcc.add(btnAccionEliminar); pAcc.add(btnAccionNuevaOrden);
         panelSur.add(pAcc, BorderLayout.CENTER);
         add(panelSur, BorderLayout.SOUTH);
 
-        // PATRÓN OBSERVER: La vista "observa" cambios en la selección de la tabla.
+        // --- PATRÓN OBSERVER (Event Handling) ---
+        // Habilitación dinámica de botones según el estado de selección de la tabla.
         tablaResultados.getSelectionModel().addListSelectionListener(e -> {
             boolean seleccionada = tablaResultados.getSelectedRow() != -1;
             btnAccionEditar.setEnabled(seleccionada);
             btnAccionEliminar.setEnabled(seleccionada);
-            btnAccionNuevaOrden.setEnabled(seleccionada);
+            btnAccionNuevaOrden.setEnabled(true); // Siempre disponible
         });
     }
 
     /**
-     * Sobrescribe el método de pintado para dibujar el fondo de imagen personalizado.
-     * PRINCIPIO POO: Polimorfismo (Sobrescritura).
+     * MÉTODO: paintComponent
+     * DESCRIPCIÓN: Renderizado personalizado del contenedor (Custom Painting).
+     * Aplica la imagen de fondo y superpone una capa oscura (Overlay) para
+     * garantizar la legibilidad de los componentes hijos.
      */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if(imagenFondo != null) {
-            g.drawImage(imagenFondo, 0, 0, getWidth(), getHeight(), this);
+        if(imagenFondoBusqueda != null) {
+            g.drawImage(imagenFondoBusqueda, 0, 0, getWidth(), getHeight(), this);
+            // Capa de oscurecimiento (Alpha Blending)
             g.setColor(new Color(0, 0, 0, 200));
             g.fillRect(0, 0, getWidth(), getHeight());
         } else {
@@ -186,11 +249,11 @@ public class PanelBusquedaInteligente extends JPanel {
     }
 
     // ============================================================================
-    // MÉTODOS DE FÁBRICA Y UTILIDAD (HELPERS)
+    // MÉTODOS DE FÁBRICA Y UTILIDAD (UI FACTORY & HELPERS)
     // ============================================================================
 
     /**
-     * Configura la alineación de las columnas de la tabla de resultados.
+     * Configura la alineación de las celdas de la tabla para mejorar la legibilidad.
      */
     private void configurarAlineacionTabla() {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -201,16 +264,10 @@ public class PanelBusquedaInteligente extends JPanel {
 
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
-        tablaResultados.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);  // Total
+        tablaResultados.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);  // Total ($)
     }
 
-    /**
-     * Método de fábrica para crear un JButton con solo un ícono y un tooltip.
-     * @param tooltip Texto de ayuda que aparece al pasar el ratón.
-     * @param ruta Ruta del archivo de imagen del ícono.
-     * @return Un JButton estilizado.
-     */
-    private JButton crearBotonIcono(String tooltip, String ruta) {
+    private JButton crearBotonIcono(String tooltip, String ruta, int size) {
         JButton b = new JButton();
         b.setToolTipText(tooltip);
         b.setContentAreaFilled(false);
@@ -219,16 +276,12 @@ public class PanelBusquedaInteligente extends JPanel {
         try {
             File f = new File(ruta);
             if (f.exists()) {
-                b.setIcon(new ImageIcon(new ImageIcon(ruta).getImage().getScaledInstance(55, 55, Image.SCALE_SMOOTH)));
+                b.setIcon(new ImageIcon(new ImageIcon(ruta).getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH)));
             }
         } catch (Exception e) {}
         return b;
     }
 
-    /**
-     * Aplica un estilo visual al componente JDateChooser.
-     * @param d El JDateChooser a estilizar.
-     */
     private void estilizarCalendario(JDateChooser d) {
         d.setPreferredSize(new Dimension(130, 35));
         d.setDateFormatString("dd-MM-yyyy");
@@ -248,9 +301,6 @@ public class PanelBusquedaInteligente extends JPanel {
         }
     }
 
-    /**
-     * Método de fábrica para crear los botones de acción contextuales del panel sur.
-     */
     private BotonFuturista crearBtnAcc(String t, String r, Color c, Dimension d) {
         BotonFuturista b = new BotonFuturista(t);
         b.setPreferredSize(d);
@@ -267,21 +317,6 @@ public class PanelBusquedaInteligente extends JPanel {
         return b;
     }
 
-    /**
-     * Carga y escala un ícono para un JLabel.
-     */
-    private void cargarIconoEnLabel(JLabel l, String r, int s) {
-        try {
-            File f = new File(r);
-            if (f.exists()) {
-                l.setIcon(new ImageIcon(new ImageIcon(r).getImage().getScaledInstance(s, s, Image.SCALE_SMOOTH)));
-            }
-        } catch (Exception e) {}
-    }
-
-    /**
-     * Método de fábrica para crear un JLabel estandarizado.
-     */
     private JLabel crearLabel(String t, int alig) {
         JLabel l = new JLabel(t, alig);
         l.setForeground(Color.LIGHT_GRAY);
@@ -289,9 +324,6 @@ public class PanelBusquedaInteligente extends JPanel {
         return l;
     }
 
-    /**
-     * Aplica un estilo visual a un JTextField.
-     */
     private void estilizarCampo(JTextField c) {
         c.setBackground(Color.WHITE);
         c.setForeground(Color.BLACK);
@@ -299,7 +331,9 @@ public class PanelBusquedaInteligente extends JPanel {
         c.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(0, 120, 215), 2), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
     }
 
-    // --- Métodos públicos para obtener los valores de los filtros ---
+    // ============================================================================
+    // MÉTODOS DE ACCESO (GETTERS)
+    // ============================================================================
 
     public String getFechaDesdeStr() {
         if (dccDesde.getDate() == null) return "";
@@ -311,12 +345,15 @@ public class PanelBusquedaInteligente extends JPanel {
         return new SimpleDateFormat("dd-MM-yyyy").format(dccHasta.getDate());
     }
 
+    /**
+     * Resetea el estado del formulario y la visualización.
+     */
     public void limpiarFormulario() {
         txtBusqueda.setText("");
         cmbEstado.setSelectedIndex(0);
         dccDesde.setDate(null);
         dccHasta.setDate(null);
         modeloTabla.setRowCount(0);
-        lblTotalResultados.setText("Listo...");
+        lblTotalResultados.setText("Listo para buscar...");
     }
 }

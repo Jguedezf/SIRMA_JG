@@ -11,7 +11,7 @@
  * DESCRIPCIÓN TÉCNICA:
  * Clase de utilidad responsable de generar los reportes de salida del sistema.
  * Transforma la lista de objetos del modelo de dominio en archivos de texto
- * plano (TXT) y de hipertexto (HTML) para su consulta externa.
+ * plano (TXT) y de hipertexto (HTML) con formato profesional.
  * ============================================================================
  */
 package persistencia;
@@ -26,115 +26,141 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Clase GestionReportes que encapsula la lógica para crear reportes en diferentes formatos.
- * PRINCIPIO POO: Modularidad - Aísla la responsabilidad de la generación de reportes
- * en una clase específica, separándola de la persistencia de datos y la lógica de negocio.
+ * Clase GestionReportes que encapsula la lógica para crear reportes.
+ * PRINCIPIO POO: Modularidad - Esta clase se encarga SOLO de escribir archivos.
  */
 public class GestionReportes {
 
     /**
-     * Genera un reporte completo de la flota en formato HTML con estilos CSS incrustados.
-     * El reporte agrupa los mantenimientos por vehículo y presenta los datos en tablas.
-     *
-     * @param listaVehiculos La lista completa de vehículos con su historial de mantenimientos.
-     * @return El nombre del archivo HTML generado (ej. "Reporte_SIRMA_2025-12-05.html"),
-     *         o {@code null} si ocurre un error de escritura.
+     * Genera un reporte HTML estilizado, con logo y columnas alineadas.
+     * @param listaVehiculos La lista completa de vehículos.
+     * @return El nombre del archivo generado o null si falla.
      */
     public String generarReporteHtml(List<Vehiculo> listaVehiculos) {
-        // Genera un nombre de archivo único basado en la fecha actual.
         String nombreArchivo = "Reporte_SIRMA_" + LocalDate.now() + ".html";
-
-        // Define el formato de fecha estándar para el reporte (DD-MM-YYYY).
         DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-        // Utiliza try-with-resources para garantizar el cierre seguro del archivo.
         try (FileWriter fw = new FileWriter(nombreArchivo); PrintWriter pw = new PrintWriter(fw)) {
 
-            // PROCESO: Escritura del contenido HTML línea por línea.
+            // 1. INICIO DEL HTML Y CSS (ESTILOS COMPACTOS)
+            pw.println("<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>");
+            pw.println("<title>Reporte de Flota - SIRMA JG</title>");
+            pw.println("<style>");
 
-            // 1. Cabecera HTML y estilos CSS inyectados para un diseño autocontenido.
-            pw.println("<html><head><title>Reporte de Flota - SIRMA JG</title><style>");
-            pw.println("body { font-family: sans-serif; background-color: #121212; color: #e0e0e0; margin: 40px; }");
-            pw.println("h1 { color: #FFD700; text-align: center; border-bottom: 2px solid #FFD700; padding-bottom: 10px; }");
-            pw.println("h2 { color: #FFD700; margin-top: 40px; }");
-            pw.println("table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; margin-top: 15px; }");
-            pw.println("th { background-color: #FFD700; color: #000000; padding: 12px; text-align: center; }");
-            pw.println("td { padding: 10px; border-bottom: 1px solid #333333; text-align: center; }");
-            pw.println("td:last-child { text-align: right; padding-right: 20px; }");
+            // AJUSTE: Márgenes del cuerpo mínimos
+            pw.println("body { font-family: 'Segoe UI', sans-serif; background-color: #1e1e1e; color: #f0f0f0; margin: 10px 20px; }");
+
+            // AJUSTE: Encabezado ULTRA COMPACTO (Sin márgenes extra)
+            pw.println(".header { text-align: center; margin-bottom: 5px; border-bottom: 2px solid #ffc107; padding-bottom: 2px; }");
+
+            // Logo sin margen abajo
+            pw.println("img { margin-bottom: 0px; display: block; margin-left: auto; margin-right: auto; }");
+
+            // Título pegado al logo
+            pw.println("h1 { color: #ffc107; margin: 0; text-transform: uppercase; letter-spacing: 2px; font-size: 22px; line-height: 1.1; }");
+
+            // Estilos de Tablas (Pegadas al título del vehículo)
+            pw.println("table { width: 100%; border-collapse: collapse; background-color: #2c2c2c; margin-bottom: 10px; margin-top: 2px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }");
+            pw.println("th { background-color: #ffc107; color: #000; padding: 6px; font-weight: bold; font-size: 13px; }");
+            pw.println("td { padding: 5px 8px; border-bottom: 1px solid #444; font-size: 12px; }");
+
+            // Alineación
+            pw.println(".text-center { text-align: center; }");
+            pw.println(".text-right { text-align: right; }");
+            pw.println(".text-left { text-align: left; }");
+
+            // Títulos de Vehículos (Pegaditos a la tabla)
+            pw.println(".vehiculo-title { color: #ffc107; font-size: 15px; margin-top: 10px; margin-bottom: 2px; border-left: 4px solid #ffc107; padding-left: 8px; font-weight: bold; }");
+
+            // Colores de Estado
+            pw.println(".est-fin { color: #28a745; font-weight: bold; }"); // Verde
+            pw.println(".est-pro { color: #ffc107; font-weight: bold; }"); // Amarillo
+            pw.println(".est-pen { color: #dc3545; font-weight: bold; }"); // Rojo
+
             pw.println("</style></head><body>");
 
-            // 2. Título y fecha del reporte.
-            pw.println("<h1>REPORTE GENERAL DE FLOTA - SIRMA JG</h1>");
-            pw.println("<p style='text-align:center'>Fecha de Corte: " + LocalDate.now().format(formatoFecha) + "</p>");
+            // 2. CONTENIDO DEL REPORTE
+            pw.println("<div class='header'>");
+            pw.println("  <img src='fondo/sirma.png' width='120' alt='Logo SIRMA'>"); // Logo un poco más pequeño para ahorrar espacio
+            pw.println("  <h1>Reporte General de Flota</h1>");
+            pw.println("  <p style='color: #aaa; font-size: 10px; margin: 2px 0;'>Fecha de Emisión: " + LocalDate.now().format(formatoFecha) + "</p>");
+            pw.println("</div>");
 
-            // 3. Itera sobre cada vehículo para generar su sección en el reporte.
+            // 3. ITERACIÓN POR VEHÍCULO
+            boolean hayDatos = false;
             for (Vehiculo v : listaVehiculos) {
                 if (!v.getHistorialMantenimientos().isEmpty()) {
-                    pw.println("<h2>Vehículo: " + v.getPlaca() + " (" + v.getMarca() + ")</h2>");
-                    pw.println("<table><tr><th>ID</th><th>Fecha</th><th>Servicio</th><th>Estado</th><th>Total ($)</th></tr>");
+                    hayDatos = true;
+                    // Título del carro
+                    pw.println("<div class='vehiculo-title'>Vehículo: " + v.getPlaca() + " - " + v.getMarca() + "</div>");
 
-                    // Itera sobre el historial de mantenimientos de cada vehículo.
+                    // Tabla
+                    pw.println("<table>");
+                    pw.println("<thead><tr>");
+                    pw.println("  <th class='text-center' width='10%'>ID</th>");
+                    pw.println("  <th class='text-center' width='15%'>Fecha</th>");
+                    pw.println("  <th class='text-left'>Servicio / Descripción</th>");
+                    pw.println("  <th class='text-center' width='15%'>Estado</th>");
+                    pw.println("  <th class='text-right' width='15%'>Total ($)</th>");
+                    pw.println("</tr></thead><tbody>");
+
                     for (modelo.Mantenimiento m : v.getHistorialMantenimientos()) {
-                        pw.println("<tr>");
-                        pw.println("  <td>" + m.getIdOrden() + "</td>");
-                        pw.println("  <td>" + m.getFechaRealizacion().format(formatoFecha) + "</td>");
-                        pw.println("  <td>" + m.getTipoServicio() + "</td>");
+                        String claseEstado = "est-pen";
+                        if(m.getEstado().equalsIgnoreCase("Finalizado")) claseEstado = "est-fin";
+                        if(m.getEstado().equalsIgnoreCase("En Proceso")) claseEstado = "est-pro";
 
-                        // Lógica de formato condicional para el color del estado.
-                        String color;
-                        switch (m.getEstado()) {
-                            case "Finalizado": color = "#4CAF50"; break; // Verde
-                            case "En Proceso": color = "#FFC107"; break; // Amarillo
-                            case "Pendiente":  color = "#F44336"; break; // Rojo
-                            default:           color = "#FFFFFF"; break; // Blanco
-                        }
-                        pw.println("  <td style='color:" + color + "; font-weight:bold;'>" + m.getEstado() + "</td>");
-                        pw.println("  <td>" + String.format(Locale.US, "%.2f", m.getCostoTotal()) + "</td>");
+                        pw.println("<tr>");
+                        pw.println("  <td class='text-center'>" + m.getIdOrden() + "</td>");
+                        pw.println("  <td class='text-center'>" + m.getFechaRealizacion().format(formatoFecha) + "</td>");
+                        pw.println("  <td class='text-left'>" + m.getTipoServicio() + "</td>");
+                        pw.println("  <td class='text-center " + claseEstado + "'>" + m.getEstado() + "</td>");
+                        pw.println("  <td class='text-right'>" + String.format(Locale.US, "%.2f", m.getCostoTotal()) + "</td>");
                         pw.println("</tr>");
                     }
-                    pw.println("</table>");
+                    pw.println("</tbody></table>");
                 }
             }
-            pw.println("</body></html>");
 
-            // SALIDA: Retorna el nombre del archivo si la operación fue exitosa.
-            return nombreArchivo;
+            if(!hayDatos) {
+                pw.println("<h3 style='text-align:center; color:#777; margin-top:30px;'>No hay mantenimientos registrados en el sistema.</h3>");
+            }
+
+            pw.println("</body></html>");
+            return nombreArchivo; // Retorna el nombre si todo salió bien
+
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return null; // Retorna null si hubo error
         }
     }
 
     /**
-     * Genera un reporte de la flota en formato de texto plano (TXT).
-     * Este formato es ideal para logs o procesamiento por otros sistemas.
-     *
-     * @param listaVehiculos La lista completa de vehículos con su historial.
-     * @return El nombre del archivo TXT generado (ej. "Reporte_SIRMA_2025-12-05.txt"),
-     *         o {@code null} si ocurre un error de escritura.
+     * Genera un reporte TXT plano.
      */
     public String generarReporteTxt(List<Vehiculo> listaVehiculos) {
         String nombreArchivo = "Reporte_SIRMA_" + LocalDate.now() + ".txt";
-        DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         try (FileWriter fw = new FileWriter(nombreArchivo); PrintWriter pw = new PrintWriter(fw)) {
             pw.println("=============================================");
             pw.println("      REPORTE DE FLOTA - SIRMA JG");
             pw.println("=============================================");
-            pw.println("Fecha de Corte: " + LocalDate.now().format(formatoFecha));
+            pw.println("Fecha: " + LocalDate.now().format(fmt));
 
             for (Vehiculo v : listaVehiculos) {
                 pw.println("\n---------------------------------------------");
-                pw.println("VEHICULO: " + v.getPlaca() + " (" + v.getMarca() + " " + v.getModelo() + ")");
+                pw.println("VEHICULO: " + v.getPlaca() + " (" + v.getMarca() + ")");
                 pw.println("---------------------------------------------");
                 if (v.getHistorialMantenimientos().isEmpty()) {
-                    pw.println("  >> Sin historial de mantenimiento registrado.");
+                    pw.println("  >> Sin historial.");
                 } else {
                     for (modelo.Mantenimiento m : v.getHistorialMantenimientos()) {
-                        // Se utiliza String.format para crear una línea de texto bien estructurada.
-                        pw.println(String.format(Locale.US, " > ID: %s | Fecha: %s | %s (%s) | Total: $%.2f",
-                                m.getIdOrden(), m.getFechaRealizacion().format(formatoFecha),
-                                m.getTipoServicio(), m.getEstado(), m.getCostoTotal()));
+                        pw.println(String.format(Locale.US, " > %s | %s | %-20s | %s | $%.2f",
+                                m.getIdOrden(),
+                                m.getFechaRealizacion().format(fmt),
+                                m.getTipoServicio(),
+                                m.getEstado(),
+                                m.getCostoTotal()));
                     }
                 }
             }

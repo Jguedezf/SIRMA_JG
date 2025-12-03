@@ -1,7 +1,7 @@
 /*
  * ============================================================================
  * PROYECTO:     Sistema Inteligente de Registro de Mantenimiento Automotriz (SIRMA_JG)
- * INSTITUCIUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
+ * INSTITUCIÓN:  Universidad Nacional Experimental de Guayana (UNEG)
  * ASIGNATURA:   Técnicas de Programación 3 - Sección 3
  * AUTORA:       Johanna Gabriela Guedez Flores
  * CÉDULA:       V-14.089.807
@@ -22,6 +22,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader; // Import necesario para encabezado
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -47,8 +48,15 @@ public class PanelGestionMecanicos extends JPanel {
      * Constructor del panel de gestión de mecánicos.
      */
     public PanelGestionMecanicos() {
+        // Carga de imagen de fondo limpia 'fondo2.png'
         try {
-            backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
+            File f = new File("fondo/fondo2.png");
+            if (f.exists()) {
+                backgroundImage = ImageIO.read(f);
+            } else {
+                // Fallback: Si no existe fondo2, intenta cargar el original
+                backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             setBackground(new Color(45, 50, 55));
@@ -135,7 +143,13 @@ public class PanelGestionMecanicos extends JPanel {
 
         tablaMecanicos.setRowHeight(35);
         tablaMecanicos.setFont(new Font("Arial", Font.BOLD, 14));
-        tablaMecanicos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+
+        // --- CAMBIO: ESTILIZADO DEL ENCABEZADO (Amarillo Corporativo) ---
+        JTableHeader header = tablaMecanicos.getTableHeader();
+        header.setFont(new Font("Arial", Font.BOLD, 14));
+        header.setBackground(new Color(255, 204, 0)); // Amarillo fuerte
+        header.setForeground(Color.BLACK); // Texto negro
+        header.setOpaque(true);
 
         JScrollPane sc = new JScrollPane(tablaMecanicos);
         sc.getViewport().setBackground(Color.WHITE);
@@ -149,6 +163,7 @@ public class PanelGestionMecanicos extends JPanel {
         if (backgroundImage != null) {
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
+        // Capa oscura para resaltar
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
     }

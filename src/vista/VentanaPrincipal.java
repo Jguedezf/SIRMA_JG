@@ -592,7 +592,7 @@ public class VentanaPrincipal extends JFrame {
             panelBusquedaInteligente.lblTotalResultados.setText(datos.length + " registro(s) encontrado(s).");
         } else {
             panelBusquedaInteligente.lblTotalResultados.setText("Sin coincidencias.");
-            JOptionPane.showMessageDialog(this, "No se encontraron resultados.");
+            JOptionPane.showMessageDialog(panelContenido, "No se encontraron resultados.", "Búsqueda", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -618,15 +618,16 @@ public class VentanaPrincipal extends JFrame {
         int f = panelBusquedaInteligente.tablaResultados.getSelectedRow();
         if (f != -1) {
             String id = (String) panelBusquedaInteligente.modeloTabla.getValueAt(f, 0);
-            if (JOptionPane.showConfirmDialog(this, "¿Eliminar orden?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(panelContenido, "¿Eliminar orden?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 if (controlador.eliminarMantenimiento(id)) {
-                    JOptionPane.showMessageDialog(this, "Orden eliminada.");
+                    JOptionPane.showMessageDialog(panelContenido, "Orden eliminada.");
                     realizarBusquedaInteligente();
                 }
             }
         }
     }
 
+    // AQUÍ FUE EL CAMBIO PRINCIPAL PARA CENTRAR LA VENTANITA EN EL PANEL
     private void crearNuevaOrdenDesdeBusqueda() {
         int f = panelBusquedaInteligente.tablaResultados.getSelectedRow();
         if (f != -1) {
@@ -635,7 +636,9 @@ public class VentanaPrincipal extends JFrame {
             panelFormularioMantenimiento.prepararParaNuevaOrden(controlador.obtenerTodosLosVehiculos());
             panelFormularioMantenimiento.comboVehiculos.setSelectedItem(placa);
             cardLayout.show(panelContenido, "FORMULARIO_MANTENIMIENTO");
-            JOptionPane.showMessageDialog(this, "Vehículo " + placa + " seleccionado.", "Asistente", JOptionPane.INFORMATION_MESSAGE);
+
+            // CAMBIO: 'panelContenido' en vez de 'this' para centrar en la sección
+            JOptionPane.showMessageDialog(panelContenido, "Vehículo " + placa + " seleccionado.", "Asistente", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

@@ -10,8 +10,7 @@
  * FECHA:        Diciembre 2025
  * DESCRIPCIÓN TÉCNICA:
  * Vista de detalle modal que renderiza una representación visual de la Orden de
- * Servicio, simulando una "hoja de solicitud" lista para imprimir.
- * Aplica principios de Herencia, Composición y patrones de Fábrica de UI.
+ * Servicio en formato HORIZONTAL (Apaisado) para mejor visualización.
  * ============================================================================
  */
 package vista;
@@ -27,118 +26,128 @@ import java.util.Locale;
 
 /**
  * Clase que genera un diálogo modal para previsualizar una orden de servicio.
- * PRINCIPIO POO: Herencia - Extiende de {@link JDialog} para obtener el
- * comportamiento de una ventana modal.
+ * PRINCIPIO POO: Herencia - Extiende de JDialog.
  */
 public class DialogoSolicitudServicio extends JDialog {
 
     /**
-     * Constructor que inicializa y construye la vista previa de la solicitud.
-     * PRINCIPIO POO: Composición - La interfaz se construye anidando múltiples
-     * paneles (JPanel) con diferentes LayoutManagers (BorderLayout, BoxLayout, etc.)
-     * para lograr una maquetación compleja y estructurada.
-     *
-     * @param owner Ventana padre que será bloqueada mientras este diálogo esté visible.
-     * @param mantenimiento Objeto del modelo que contiene los datos del servicio.
-     * @param vehiculo Objeto del modelo que contiene los datos del vehículo y su propietario.
+     * Constructor que inicializa la vista previa horizontal.
      */
     public DialogoSolicitudServicio(Frame owner, Mantenimiento mantenimiento, Vehiculo vehiculo) {
-        super(owner, "Solicitud de Servicio - SIRMA JG", true); // `true` para modalidad.
-        setSize(650, 750);
+        super(owner, "Solicitud de Servicio - SIRMA JG", true);
+
+        // AJUSTE: Tamaño más ancho (Horizontal)
+        setSize(900, 500);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        // --- PANEL CONTENEDOR PRINCIPAL ---
-        // Se aísla el estilo: este panel fuerza un fondo blanco para simular una hoja de papel,
-        // ignorando el tema oscuro global de la aplicación.
+        // Panel Principal (Fondo Blanco)
         JPanel panelContenedor = new JPanel(new BorderLayout());
         panelContenedor.setBackground(Color.WHITE);
 
-        // Panel "Hoja" que contendrá toda la información.
-        JPanel panelHoja = new JPanel();
-        panelHoja.setLayout(new BoxLayout(panelHoja, BoxLayout.Y_AXIS)); // Apilado vertical.
+        // Panel "Hoja"
+        JPanel panelHoja = new JPanel(new BorderLayout(20, 20)); // Márgenes internos
         panelHoja.setBackground(Color.WHITE);
-        panelHoja.setBorder(new EmptyBorder(40, 50, 40, 50)); // Simula márgenes de impresión.
+        panelHoja.setBorder(new EmptyBorder(20, 30, 20, 30));
 
-        // --- SECCIÓN 1: ENCABEZADO (LOGO Y TÍTULO) ---
-        JPanel panelEncabezado = new JPanel(new BorderLayout(20, 0));
-        panelEncabezado.setOpaque(false); // Transparente para heredar el fondo blanco.
+        // --- 1. ENCABEZADO ---
+        JPanel panelEncabezado = new JPanel(new BorderLayout());
+        panelEncabezado.setOpaque(false);
 
         JLabel lblLogo = new JLabel();
         try {
-            ImageIcon logoIcon = new ImageIcon(new ImageIcon("fondo/sirma.png").getImage().getScaledInstance(120, -1, Image.SCALE_SMOOTH));
+            ImageIcon logoIcon = new ImageIcon(new ImageIcon("fondo/sirma.png").getImage().getScaledInstance(100, -1, Image.SCALE_SMOOTH));
             lblLogo.setIcon(logoIcon);
-        } catch (Exception e) {
-            // Carga silenciosa: si el logo no se encuentra, simplemente no se muestra.
-        }
+        } catch (Exception e) { }
 
-        JLabel lblTitulo = new JLabel("<html><div style='text-align: center;'>SOLICITUD DE SERVICIO DE<br>MANTENIMIENTO AUTOMOTRIZ</div></html>");
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+        JLabel lblTitulo = new JLabel("SOLICITUD DE SERVICIO DE MANTENIMIENTO", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 22));
         lblTitulo.setForeground(Color.BLACK);
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
 
         panelEncabezado.add(lblLogo, BorderLayout.WEST);
         panelEncabezado.add(lblTitulo, BorderLayout.CENTER);
-        panelHoja.add(panelEncabezado);
-        panelHoja.add(Box.createVerticalStrut(30)); // Espaciador vertical.
+        panelHoja.add(panelEncabezado, BorderLayout.NORTH);
 
-        // --- SECCIÓN 2: DATOS DEL CLIENTE Y VEHÍCULO ---
-        panelHoja.add(crearSeccion("DATOS DEL VEHÍCULO Y PROPIETARIO"));
-        panelHoja.add(Box.createVerticalStrut(10));
-        panelHoja.add(crearFilaDoble("Placa:", vehiculo.getPlaca(), "Propietario:", vehiculo.getPropietario().getNombreCompleto()));
-        panelHoja.add(crearFilaDoble("Vehículo:", vehiculo.getMarca() + " " + vehiculo.getModelo(), "Cédula:", vehiculo.getPropietario().getCedula()));
-        panelHoja.add(crearFilaDoble("Año / Color:", vehiculo.getAnio() + " - " + vehiculo.getColor(), "Teléfono:", vehiculo.getPropietario().getTelefono()));
-        panelHoja.add(Box.createVerticalStrut(20));
+        // --- 2. CUERPO (DIVIDIDO EN 2 COLUMNAS) ---
+        JPanel panelCuerpo = new JPanel(new GridLayout(1, 2, 30, 0)); // 2 Columnas, separación de 30px
+        panelCuerpo.setOpaque(false);
 
-        // --- SECCIÓN 3: DETALLES DE LA ORDEN ---
-        panelHoja.add(crearSeccion("DETALLES DEL SERVICIO"));
-        panelHoja.add(Box.createVerticalStrut(10));
+        // --- COLUMNA IZQUIERDA: DATOS Y VEHÍCULO ---
+        JPanel panelIzq = new JPanel();
+        panelIzq.setLayout(new BoxLayout(panelIzq, BoxLayout.Y_AXIS));
+        panelIzq.setOpaque(false);
 
-        // Se define un formateador para mostrar la fecha en formato DD-MM-YYYY.
-        DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        panelIzq.add(crearSeccion("DATOS DEL VEHÍCULO Y CLIENTE"));
+        panelIzq.add(Box.createVerticalStrut(10));
+        panelIzq.add(crearCampo("Placa:", vehiculo.getPlaca()));
+        panelIzq.add(crearCampo("Vehículo:", vehiculo.getMarca() + " " + vehiculo.getModelo()));
+        panelIzq.add(crearCampo("Propietario:", vehiculo.getPropietario().getNombreCompleto()));
+        panelIzq.add(crearCampo("Cédula:", vehiculo.getPropietario().getCedula()));
+        panelIzq.add(crearCampo("Teléfono:", vehiculo.getPropietario().getTelefono()));
 
-        panelHoja.add(crearCampo("ID de Orden:", mantenimiento.getIdOrden()));
-        panelHoja.add(crearCampo("Fecha de Emisión:", mantenimiento.getFechaRealizacion().format(formatoFecha)));
-        panelHoja.add(crearCampo("Tipo de Servicio:", mantenimiento.getTipoServicio()));
-        panelHoja.add(crearCampo("Kilometraje:", mantenimiento.getKilometrajeActual() + " Km"));
+        panelIzq.add(Box.createVerticalStrut(20));
+        panelIzq.add(crearSeccion("DETALLES OPERATIVOS"));
+        panelIzq.add(Box.createVerticalStrut(10));
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        panelIzq.add(crearCampo("ID Orden:", mantenimiento.getIdOrden()));
+        panelIzq.add(crearCampo("Fecha:", mantenimiento.getFechaRealizacion().format(fmt)));
+        panelIzq.add(crearCampo("Kilometraje:", mantenimiento.getKilometrajeActual() + " Km"));
+
+        // --- COLUMNA DERECHA: SERVICIO Y COSTOS ---
+        JPanel panelDer = new JPanel();
+        panelDer.setLayout(new BoxLayout(panelDer, BoxLayout.Y_AXIS));
+        panelDer.setOpaque(false);
+
+        panelDer.add(crearSeccion("DESCRIPCIÓN DEL SERVICIO"));
+        panelDer.add(Box.createVerticalStrut(10));
+        panelDer.add(crearCampo("Tipo:", mantenimiento.getTipoServicio()));
         String desc = mantenimiento.getDescripcionDetallada().isEmpty() ? "(Sin observaciones)" : mantenimiento.getDescripcionDetallada();
-        panelHoja.add(crearCampo("Descripción:", "<html><p style='width:350px'>" + desc + "</p></html>"));
-        panelHoja.add(Box.createVerticalStrut(20));
+        JTextArea txtDesc = new JTextArea(desc);
+        txtDesc.setLineWrap(true);
+        txtDesc.setWrapStyleWord(true);
+        txtDesc.setEditable(false);
+        txtDesc.setFont(new Font("Arial", Font.PLAIN, 12));
+        txtDesc.setBackground(new Color(245, 245, 245)); // Gris muy claro
+        txtDesc.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        panelDer.add(txtDesc);
 
-        // --- SECCIÓN 4: COSTOS ---
-        panelHoja.add(crearSeccion("ESTIMACIÓN DE COSTOS"));
-        panelHoja.add(Box.createVerticalStrut(10));
-        panelHoja.add(crearFilaDoble(
-                "Mano de Obra:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoManoObra()),
-                "Repuestos:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoRepuestos())
-        ));
+        panelDer.add(Box.createVerticalStrut(20));
+        panelDer.add(crearSeccion("RESUMEN DE COSTOS"));
+        panelDer.add(Box.createVerticalStrut(10));
+        panelDer.add(crearCampo("Mano de Obra:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoManoObra())));
+        panelDer.add(crearCampo("Repuestos:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoRepuestos())));
 
-        // Total destacado, alineado a la derecha.
-        JPanel pTotal = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pTotal.setOpaque(false);
-        JLabel lTotal = new JLabel("TOTAL A PAGAR:  $" + String.format(Locale.US, "%.2f", mantenimiento.getCostoTotal()));
-        lTotal.setFont(new Font("Arial", Font.BOLD, 16));
-        lTotal.setForeground(Color.BLACK);
-        pTotal.add(lTotal);
-        panelHoja.add(pTotal);
+        JLabel lTotal = new JLabel("TOTAL: $" + String.format(Locale.US, "%.2f", mantenimiento.getCostoTotal()));
+        lTotal.setFont(new Font("Arial", Font.BOLD, 24));
+        lTotal.setForeground(new Color(0, 100, 0)); // Verde oscuro
+        lTotal.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panelDer.add(Box.createVerticalStrut(10));
+        panelDer.add(lTotal);
 
-        panelHoja.add(Box.createVerticalGlue()); // Componente flexible que empuja el footer hacia abajo.
+        panelCuerpo.add(panelIzq);
+        panelCuerpo.add(panelDer);
+        panelHoja.add(panelCuerpo, BorderLayout.CENTER);
 
-        // --- FOOTER: FIRMA ---
-        JLabel lblFirmaLine = new JLabel("_______________________________");
-        lblFirmaLine.setForeground(Color.BLACK);
-        lblFirmaLine.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel lblFirmaText = new JLabel("Firma del Propietario / Autorización");
-        lblFirmaText.setFont(new Font("Arial", Font.ITALIC, 12));
-        lblFirmaText.setForeground(Color.BLACK);
-        lblFirmaText.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panelHoja.add(lblFirmaLine);
-        panelHoja.add(lblFirmaText);
+        // --- 3. PIE DE PÁGINA (FIRMA) ---
+        JPanel panelPie = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelPie.setOpaque(false);
+        panelPie.setBorder(new EmptyBorder(20, 0, 0, 0));
 
-        // --- BOTÓN DE CIERRE (EXTERNO A LA HOJA) ---
+        JPanel pFirma = new JPanel(new BorderLayout());
+        pFirma.setOpaque(false);
+        JLabel lLinea = new JLabel("_______________________________", SwingConstants.CENTER);
+        JLabel lTexto = new JLabel("Firma del Propietario / Autorización", SwingConstants.CENTER);
+        lTexto.setFont(new Font("Arial", Font.ITALIC, 11));
+        pFirma.add(lLinea, BorderLayout.NORTH);
+        pFirma.add(lTexto, BorderLayout.CENTER);
+
+        panelPie.add(pFirma);
+        panelHoja.add(panelPie, BorderLayout.SOUTH);
+
+        // --- BOTÓN CERRAR ---
         JPanel panelSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelSur.setBackground(new Color(45, 50, 55)); // Se mantiene el tema oscuro del sistema.
-        BotonFuturista btnCerrar = new BotonFuturista("Cerrar Vista Previa");
+        panelSur.setBackground(new Color(45, 50, 55));
+        BotonFuturista btnCerrar = new BotonFuturista("Cerrar Vista");
         btnCerrar.addActionListener(e -> dispose());
         panelSur.add(btnCerrar);
 
@@ -147,58 +156,31 @@ public class DialogoSolicitudServicio extends JDialog {
         add(panelContenedor);
     }
 
-    // =========================================================================
-    // MÉTODOS DE FÁBRICA DE UI (UI FACTORY METHODS)
-    // Estos métodos privados se encargan de crear componentes reutilizables,
-    // asegurando un estilo consistente y simplificando el código del constructor.
-    // =========================================================================
+    // --- MÉTODOS DE FÁBRICA ---
 
-    /**
-     * Método de Fábrica para crear un título de sección con un borde inferior.
-     * @param titulo El texto del título.
-     * @return Un JPanel formateado como un título de sección.
-     */
     private JPanel crearSeccion(String titulo) {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
+        p.setMaximumSize(new Dimension(1000, 30)); // Altura fija
         JLabel l = new JLabel(titulo);
         l.setFont(new Font("Arial", Font.BOLD, 14));
-        l.setForeground(Color.BLACK);
-        l.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, Color.BLACK));
+        l.setForeground(new Color(0, 51, 102)); // Azul oscuro
+        l.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 51, 102)));
         p.add(l, BorderLayout.CENTER);
         return p;
     }
 
-    /**
-     * Método de Fábrica para crear una fila de datos simple (Etiqueta: Valor).
-     * @param etiqueta El texto de la etiqueta.
-     * @param valor El texto del valor.
-     * @return Un JPanel que contiene una etiqueta y su valor.
-     */
     private JPanel crearCampo(String etiqueta, String valor) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         p.setOpaque(false);
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel le = new JLabel(etiqueta);
         le.setFont(new Font("Arial", Font.BOLD, 12));
-        le.setPreferredSize(new Dimension(120, 20));
-        le.setForeground(Color.BLACK);
+        le.setPreferredSize(new Dimension(100, 20));
         JLabel lv = new JLabel(valor);
         lv.setFont(new Font("Arial", Font.PLAIN, 12));
-        lv.setForeground(Color.BLACK);
         p.add(le);
         p.add(lv);
-        return p;
-    }
-
-    /**
-     * Método de Fábrica para crear una fila de datos con dos columnas.
-     * @return Un JPanel que contiene dos pares de etiqueta-valor.
-     */
-    private JPanel crearFilaDoble(String et1, String v1, String et2, String v2) {
-        JPanel p = new JPanel(new GridLayout(1, 2));
-        p.setOpaque(false);
-        p.add(crearCampo(et1, v1));
-        p.add(crearCampo(et2, v2));
         return p;
     }
 }

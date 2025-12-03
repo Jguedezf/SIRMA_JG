@@ -45,30 +45,30 @@ public class PanelReportes extends JPanel {
      * PRINCIPIO POO: Composición - La interfaz se construye anidando componentes.
      */
     public PanelReportes() {
-        // Carga de la imagen de fondo.
+        // CAMBIO 1: Cargar 'fondo3.png' (Imagen limpia sin título)
         try {
-            backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBackground(new Color(45, 50, 55));
+            File f = new File("fondo/fondo3.png");
+            if (f.exists()) {
+                backgroundImage = ImageIO.read(f);
+            } else {
+                // Fallback: Si no existe fondo3, intenta cargar el original
+                backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
+            }
+        } catch(Exception e){
+            // Silencioso, usa color de fondo por defecto
         }
 
         setLayout(new GridBagLayout());
         setBorder(new EmptyBorder(40, 40, 40, 40));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 15, 15, 15);
+        gbc.insets = new Insets(10, 15, 10, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.gridwidth = 2; // Elementos centrados ocupan todo el ancho
 
-        // --- SECCIÓN 1: ENCABEZADO ---
-        JLabel lblIcono = new JLabel();
-        cargarIconoEnLabel(lblIcono, "fondo/icono_imprimir_reporte.png", 80);
-        gbc.gridwidth = 2; // El ícono ocupa dos columnas.
-        add(lblIcono, gbc);
-
-        gbc.gridy++;
+        // --- SECCIÓN 1: ENCABEZADO (SIN ÍCONO AQUÍ) ---
         JLabel lblTitulo = new JLabel("Centro de Reportes y Cierre", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitulo.setForeground(Color.WHITE);
@@ -81,37 +81,50 @@ public class PanelReportes extends JPanel {
         add(lblDesc, gbc);
 
         // --- SECCIÓN 2: BOTONES DE GENERACIÓN DE REPORTES ---
-        gbc.gridwidth = 1; // Se revierte a una columna por componente.
         gbc.gridy++;
+        gbc.gridwidth = 1; // Dividimos en 2 columnas
+
         btnGenerarHTML = new BotonFuturista("Generar Reporte HTML (Visual)");
         btnGenerarHTML.setBackground(new Color(0, 120, 215));
         btnGenerarHTML.setPreferredSize(new Dimension(250, 50));
+        gbc.gridx = 0;
         add(btnGenerarHTML, gbc);
 
-        gbc.gridx = 1;
         btnGenerarTXT = new BotonFuturista("Generar Reporte TXT (Plano)");
         btnGenerarTXT.setPreferredSize(new Dimension(250, 50));
+        gbc.gridx = 1;
         add(btnGenerarTXT, gbc);
 
-        // --- SECCIÓN 3: ETIQUETA DE ESTADO (FEEDBACK PARA EL USUARIO) ---
+        // --- SECCIÓN 3: ETIQUETA DE ESTADO ---
         gbc.gridx = 0;
         gbc.gridy++;
-        gbc.gridwidth = 2;
-        lblEstado = new JLabel(" ", SwingConstants.CENTER); // Se inicia con un espacio para reservar el lugar.
+        gbc.gridwidth = 2; // Volvemos a ocupar todo el ancho
+        lblEstado = new JLabel(" ", SwingConstants.CENTER);
         lblEstado.setFont(new Font("Monospaced", Font.BOLD, 14));
-        lblEstado.setForeground(new Color(255, 200, 0)); // Color inicial neutral.
-        lblEstado.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        lblEstado.setForeground(new Color(255, 200, 0));
         add(lblEstado, gbc);
 
-        // --- SECCIÓN 4: BOTONES DE UTILIDAD ---
+        // --- SECCIÓN 4: UTILIDAD Y DECORACIÓN ---
+
+        // Botón Abrir Carpeta
         gbc.gridy++;
         btnAbrirCarpeta = new BotonFuturista("Abrir Carpeta de Reportes");
         btnAbrirCarpeta.setBackground(new Color(60, 65, 70));
         add(btnAbrirCarpeta, gbc);
 
+        // --- CAMBIO 2: ÍCONO GRANDE EN EL CENTRO (DECORATIVO) ---
+        gbc.gridy++;
+        JLabel lblIconoDeco = new JLabel();
+        // Tamaño aumentado a 130x130 para que destaque bien abajo
+        cargarIconoEnLabel(lblIconoDeco, "fondo/icono_imprimir_reporte.png", 130);
+        // Le damos un margen extra arriba y abajo para que no pegue con los botones
+        lblIconoDeco.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        add(lblIconoDeco, gbc);
+
+        // Botón Volver
         gbc.gridy++;
         btnVolverInicio = new BotonFuturista("Volver al Inicio");
-        btnVolverInicio.setBackground(new Color(150, 50, 50)); // Color rojo para acción de salida/retorno.
+        btnVolverInicio.setBackground(new Color(150, 50, 50)); // Rojo
         add(btnVolverInicio, gbc);
     }
 
@@ -155,6 +168,7 @@ public class PanelReportes extends JPanel {
         if (backgroundImage != null) {
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
+        // Capa oscura para que se lean las letras sobre el fondo del carro
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
     }

@@ -48,7 +48,7 @@ public class RenderizadorEstadoOrden extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus, int row, int column) {
 
-        // 1. LLAMADA AL MÉTODO PADRE:
+        // 1. LLAMADA AL METODO PADRE:
         // Se obtiene el componente JLabel base ya configurado por la superclase
         // con los estilos por defecto (fuente, borde, etc.).
         Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);

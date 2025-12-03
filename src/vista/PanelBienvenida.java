@@ -47,12 +47,14 @@ public class PanelBienvenida extends JPanel {
         setLayout(new BorderLayout());
         cargarImagenFondo();
 
-        // --- Título Principal ---
-        JLabel lblTitulo = new JLabel("<html><center>Bienvenido al Sistema Inteligente de<br>Registro de Mantenimiento Automotriz (SIRMA JG)</center></html>", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0));
-        add(lblTitulo, BorderLayout.NORTH);
+        // =================================================================================
+        // ESPACIO SUPERIOR INVISIBLE (Para que se vea el título de tu imagen de fondo)
+        // =================================================================================
+        JPanel panelEspacioSuperior = new JPanel();
+        panelEspacioSuperior.setOpaque(false);
+        panelEspacioSuperior.setPreferredSize(new Dimension(800, 220));
+        add(panelEspacioSuperior, BorderLayout.NORTH);
+        // =================================================================================
 
         // --- Panel de Tarjetas de Acceso Rápido ---
         // PRINCIPIO POO: Composición - Se utiliza un JPanel para agrupar los botones.
@@ -103,8 +105,7 @@ public class PanelBienvenida extends JPanel {
             Graphics2D g2d = (Graphics2D) g;
 
             // --- ALGORITMO DE ESCALADO DE IMAGEN "COVER" ---
-            // Este algoritmo asegura que la imagen cubra todo el panel sin deformarse,
-            // recortando los excesos si es necesario, similar a 'background-size: cover' en CSS.
+            // Este algoritmo asegura que la imagen cubra todo el panel sin deformarse.
             int panelAncho = getWidth();
             int panelAlto = getHeight();
             int imgAncho = imagenFondo.getWidth(this);
@@ -131,9 +132,10 @@ public class PanelBienvenida extends JPanel {
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2d.drawImage(imagenFondo, x, y, nuevoAncho, nuevoAlto, this);
 
-            // Se aplica una capa oscura semitransparente para mejorar la legibilidad del texto.
-            g2d.setColor(new Color(0, 0, 0, 120));
-            g2d.fillRect(0, 0, panelAncho, panelAlto);
+            // --- MODIFICACIÓN: SE ELIMINÓ LA CAPA NEGRA ---
+            // Antes había aquí un g2d.fillRect con color negro semitransparente.
+            // Ahora la imagen se muestra tal cual es, brillante y a todo color.
+
         } else {
             // Si la imagen no se pudo cargar, se dibuja un color de fondo sólido.
             g.setColor(new Color(45, 50, 55));

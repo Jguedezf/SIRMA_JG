@@ -39,7 +39,7 @@ public class RenderizadorMarca extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus, int row, int column) {
 
-        // 1. LLAMADA AL MÉTODO PADRE:
+        // 1. LLAMADA AL METODO PADRE:
         // Obtiene el componente base (JLabel) con la configuración por defecto.
         super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 

@@ -61,7 +61,7 @@ public class PanelGestionMantenimientos extends JPanel {
     public PanelGestionMantenimientos() {
         // Carga de la imagen de fondo.
         try {
-            backgroundImage = ImageIO.read(new File("fondo/fondo.png"));
+            backgroundImage = ImageIO.read(new File("fondo/fondo2.png"));
         } catch (Exception e) {
             e.printStackTrace();
             setBackground(new Color(45, 50, 55));

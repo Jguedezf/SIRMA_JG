@@ -52,8 +52,8 @@ public class PanelContenidoPrincipal extends JPanel {
     }
 
     /**
-     * Sobrescribe el método de pintado del panel para dibujar el fondo personalizado.
-     * Este método es llamado automáticamente por el sistema de renderizado de Swing.
+     * Sobrescribe el metodo de pintado del panel para dibujar el fondo personalizado.
+     * Este método es llamado automaticamente por el sistema de renderizado de Swing.
      * PRINCIPIO POO: Polimorfismo (Sobrescritura) - Redefine el comportamiento de
      * `paintComponent` para añadir la lógica de dibujado de la imagen.
      *
@@ -61,10 +61,10 @@ public class PanelContenidoPrincipal extends JPanel {
      */
     @Override
     protected void paintComponent(Graphics g) {
-        // Llama al método de la superclase para asegurar que el pintado base se realice.
+        // Llama al metodo de la superclase para asegurar que el pintado base se realice.
         super.paintComponent(g);
 
-        // 1. Dibuja la imagen de fondo, escalándola para que ocupe todo el tamaño del panel.
+        // 1. Dibuja la imagen de fondo, escalándola para que ocupe todo el tamano del panel.
         if (backgroundImage != null) {
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
