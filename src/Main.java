@@ -26,7 +26,7 @@ import java.awt.*;
 public class Main {
 
     /**
-     * Método principal de ejecución.
+     * Metodo principal de ejecución.
      * @param args Argumentos de línea de comandos (No utilizados en esta versión).
      */
     public static void main(String[] args) {
