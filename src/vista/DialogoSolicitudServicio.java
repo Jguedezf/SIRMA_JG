@@ -25,32 +25,35 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /**
- * Clase que genera un diálogo modal para previsualizar una orden de servicio.
- * PRINCIPIO POO: Herencia - Extiende de JDialog.
+ * IDENTIFICACIÓN DE CLASE: DialogoSolicitudServicio
+ * Genera un diálogo modal para previsualizar una orden de servicio.
+ * PRINCIPIO POO: Herencia - Extiende de JDialog para comportamiento de ventana secundaria.
  */
 public class DialogoSolicitudServicio extends JDialog {
 
     /**
-     * Constructor que inicializa la vista previa horizontal.
+     * MÉTODO CONSTRUCTOR
+     * ENTRADA: Frame padre, objeto Mantenimiento y objeto Vehiculo.
+     * PROCESO: Construye la interfaz gráfica horizontal simulando una hoja de servicio.
      */
     public DialogoSolicitudServicio(Frame owner, Mantenimiento mantenimiento, Vehiculo vehiculo) {
         super(owner, "Solicitud de Servicio - SIRMA JG", true);
 
-        // AJUSTE: Tamaño más ancho (Horizontal)
-        setSize(900, 500);
+        // PROCESO: Configuración de la ventana (Horizontal/Apaisado)
+        setSize(950, 550); // Dimensiones ajustadas para mejor visualización
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        // Panel Principal (Fondo Blanco)
+        // Panel Principal (Contenedor Base)
         JPanel panelContenedor = new JPanel(new BorderLayout());
         panelContenedor.setBackground(Color.WHITE);
 
-        // Panel "Hoja"
-        JPanel panelHoja = new JPanel(new BorderLayout(20, 20)); // Márgenes internos
+        // Panel "Hoja" (Simulación de documento físico)
+        JPanel panelHoja = new JPanel(new BorderLayout(20, 20));
         panelHoja.setBackground(Color.WHITE);
         panelHoja.setBorder(new EmptyBorder(20, 30, 20, 30));
 
-        // --- 1. ENCABEZADO ---
+        // --- 1. SECCIÓN ENCABEZADO ---
         JPanel panelEncabezado = new JPanel(new BorderLayout());
         panelEncabezado.setOpaque(false);
 
@@ -58,7 +61,9 @@ public class DialogoSolicitudServicio extends JDialog {
         try {
             ImageIcon logoIcon = new ImageIcon(new ImageIcon("fondo/sirma.png").getImage().getScaledInstance(100, -1, Image.SCALE_SMOOTH));
             lblLogo.setIcon(logoIcon);
-        } catch (Exception e) { }
+        } catch (Exception e) {
+            // Validación: Si no encuentra la imagen, continúa sin error crítico
+        }
 
         JLabel lblTitulo = new JLabel("SOLICITUD DE SERVICIO DE MANTENIMIENTO", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 22));
@@ -68,17 +73,18 @@ public class DialogoSolicitudServicio extends JDialog {
         panelEncabezado.add(lblTitulo, BorderLayout.CENTER);
         panelHoja.add(panelEncabezado, BorderLayout.NORTH);
 
-        // --- 2. CUERPO (DIVIDIDO EN 2 COLUMNAS) ---
-        JPanel panelCuerpo = new JPanel(new GridLayout(1, 2, 30, 0)); // 2 Columnas, separación de 30px
+        // --- 2. CUERPO DEL DOCUMENTO (Layout de Columnas) ---
+        JPanel panelCuerpo = new JPanel(new GridLayout(1, 2, 30, 0));
         panelCuerpo.setOpaque(false);
 
-        // --- COLUMNA IZQUIERDA: DATOS Y VEHÍCULO ---
+        // COLUMNA IZQUIERDA: Datos del Vehículo y Cliente
         JPanel panelIzq = new JPanel();
         panelIzq.setLayout(new BoxLayout(panelIzq, BoxLayout.Y_AXIS));
         panelIzq.setOpaque(false);
 
         panelIzq.add(crearSeccion("DATOS DEL VEHÍCULO Y CLIENTE"));
         panelIzq.add(Box.createVerticalStrut(10));
+        // Visualización de atributos del objeto Vehiculo
         panelIzq.add(crearCampo("Placa:", vehiculo.getPlaca()));
         panelIzq.add(crearCampo("Vehículo:", vehiculo.getMarca() + " " + vehiculo.getModelo()));
         panelIzq.add(crearCampo("Propietario:", vehiculo.getPropietario().getNombreCompleto()));
@@ -88,12 +94,14 @@ public class DialogoSolicitudServicio extends JDialog {
         panelIzq.add(Box.createVerticalStrut(20));
         panelIzq.add(crearSeccion("DETALLES OPERATIVOS"));
         panelIzq.add(Box.createVerticalStrut(10));
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        // Visualización de atributos del objeto Mantenimiento
         panelIzq.add(crearCampo("ID Orden:", mantenimiento.getIdOrden()));
         panelIzq.add(crearCampo("Fecha:", mantenimiento.getFechaRealizacion().format(fmt)));
         panelIzq.add(crearCampo("Kilometraje:", mantenimiento.getKilometrajeActual() + " Km"));
 
-        // --- COLUMNA DERECHA: SERVICIO Y COSTOS ---
+        // COLUMNA DERECHA: Detalles del Servicio y Costos
         JPanel panelDer = new JPanel();
         panelDer.setLayout(new BoxLayout(panelDer, BoxLayout.Y_AXIS));
         panelDer.setOpaque(false);
@@ -101,25 +109,27 @@ public class DialogoSolicitudServicio extends JDialog {
         panelDer.add(crearSeccion("DESCRIPCIÓN DEL SERVICIO"));
         panelDer.add(Box.createVerticalStrut(10));
         panelDer.add(crearCampo("Tipo:", mantenimiento.getTipoServicio()));
+
         String desc = mantenimiento.getDescripcionDetallada().isEmpty() ? "(Sin observaciones)" : mantenimiento.getDescripcionDetallada();
         JTextArea txtDesc = new JTextArea(desc);
         txtDesc.setLineWrap(true);
         txtDesc.setWrapStyleWord(true);
         txtDesc.setEditable(false);
         txtDesc.setFont(new Font("Arial", Font.PLAIN, 12));
-        txtDesc.setBackground(new Color(245, 245, 245)); // Gris muy claro
+        txtDesc.setBackground(new Color(245, 245, 245));
         txtDesc.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         panelDer.add(txtDesc);
 
         panelDer.add(Box.createVerticalStrut(20));
         panelDer.add(crearSeccion("RESUMEN DE COSTOS"));
         panelDer.add(Box.createVerticalStrut(10));
+        // Formateo de salida numérico (Locale US para punto decimal)
         panelDer.add(crearCampo("Mano de Obra:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoManoObra())));
         panelDer.add(crearCampo("Repuestos:", "$" + String.format(Locale.US, "%.2f", mantenimiento.getCostoRepuestos())));
 
         JLabel lTotal = new JLabel("TOTAL: $" + String.format(Locale.US, "%.2f", mantenimiento.getCostoTotal()));
         lTotal.setFont(new Font("Arial", Font.BOLD, 24));
-        lTotal.setForeground(new Color(0, 100, 0)); // Verde oscuro
+        lTotal.setForeground(new Color(0, 100, 0));
         lTotal.setAlignmentX(Component.LEFT_ALIGNMENT);
         panelDer.add(Box.createVerticalStrut(10));
         panelDer.add(lTotal);
@@ -144,27 +154,36 @@ public class DialogoSolicitudServicio extends JDialog {
         panelPie.add(pFirma);
         panelHoja.add(panelPie, BorderLayout.SOUTH);
 
-        // --- BOTÓN CERRAR ---
+        // ====================================================================
+        // SECCIÓN CORREGIDA: BOTÓN DE CIERRE
+        // ====================================================================
         JPanel panelSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelSur.setBackground(new Color(45, 50, 55));
+
+        // INSTANCIACIÓN: Botón personalizado
         BotonFuturista btnCerrar = new BotonFuturista("Cerrar Vista");
+
+        // [CORRECCIÓN VISUAL] Se define tamaño fijo para dar holgura al texto
+        btnCerrar.setPreferredSize(new Dimension(180, 45));
+
         btnCerrar.addActionListener(e -> dispose());
         panelSur.add(btnCerrar);
+        // ====================================================================
 
         panelContenedor.add(panelHoja, BorderLayout.CENTER);
         panelContenedor.add(panelSur, BorderLayout.SOUTH);
         add(panelContenedor);
     }
 
-    // --- MÉTODOS DE FÁBRICA ---
+    // --- MÉTODOS DE FÁBRICA (Helpers de UI) ---
 
     private JPanel crearSeccion(String titulo) {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
-        p.setMaximumSize(new Dimension(1000, 30)); // Altura fija
+        p.setMaximumSize(new Dimension(1000, 30));
         JLabel l = new JLabel(titulo);
         l.setFont(new Font("Arial", Font.BOLD, 14));
-        l.setForeground(new Color(0, 51, 102)); // Azul oscuro
+        l.setForeground(new Color(0, 51, 102));
         l.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 51, 102)));
         p.add(l, BorderLayout.CENTER);
         return p;

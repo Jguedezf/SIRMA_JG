@@ -315,7 +315,7 @@ public class Login extends JFrame {
     }
 
     /**
-     * Método para la instanciación dinámica de la ventana principal.
+     * Metodo para la instanciación dinámica de la ventana principal.
      * Utiliza reflexión para desacoplar dependencias directas en tiempo de compilación.
      */
     private void abrirSistema(String u) {

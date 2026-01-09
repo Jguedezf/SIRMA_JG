@@ -78,6 +78,8 @@ public class VentanaPrincipal extends JFrame {
     private final PanelReportes panelReportes;
     private final PanelGestionMecanicos panelGestionMecanicos;
     private final PanelBusquedaInteligente panelBusquedaInteligente;
+    // NUEVO PANEL
+    private final PanelHistorialVehiculo panelHistorial;
 
     /**
      * CONSTRUCTOR: VentanaPrincipal
@@ -114,9 +116,11 @@ public class VentanaPrincipal extends JFrame {
         panelFormularioMantenimiento = new PanelGestionMantenimientos();
         panelReportes = new PanelReportes();
         panelGestionMecanicos = new PanelGestionMecanicos();
-
         // Inyección del controlador al panel de búsqueda (Comunicación directa Vista-Controlador)
         panelBusquedaInteligente = new PanelBusquedaInteligente(controlador);
+
+        // INSTANCIAR EL NUEVO PANEL DE HISTORIAL
+        panelHistorial = new PanelHistorialVehiculo();
 
         // 4. Registro de Vistas en el CardLayout (Mapeo Clave-Valor)
         panelContenido.add(panelBienvenida, "BIENVENIDA");
@@ -126,6 +130,9 @@ public class VentanaPrincipal extends JFrame {
         panelContenido.add(panelReportes, "REPORTES");
         panelContenido.add(panelGestionMecanicos, "MECANICOS");
         panelContenido.add(panelBusquedaInteligente, "BUSQUEDA");
+
+        // AGREGAR LA NUEVA PANTALLA
+        panelContenido.add(panelHistorial, "HISTORIAL");
 
         // 5. Composición Final
         add(panelMenu, BorderLayout.WEST);
@@ -166,14 +173,22 @@ public class VentanaPrincipal extends JFrame {
         panelGestionVehiculos.btnLimpiar.addActionListener(e -> panelGestionVehiculos.limpiarFormulario());
         panelGestionVehiculos.btnEliminar.addActionListener(e -> eliminarVehiculoSeleccionado());
 
+        // ACCIÓN DEL NUEVO BOTÓN "VER HISTORIAL"
+        panelGestionVehiculos.btnVerHistorial.addActionListener(e -> verHistorialSeleccionado());
+
         // Listener de JTable: Data Binding (Modelo -> Vista al seleccionar fila)
         panelGestionVehiculos.tablaVehiculos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 cargarVehiculoSeleccionadoEnFormulario();
+                boolean haySeleccion = panelGestionVehiculos.tablaVehiculos.getSelectedRow() != -1;
                 // Habilitación contextual del botón eliminar
-                panelGestionVehiculos.btnEliminar.setEnabled(panelGestionVehiculos.tablaVehiculos.getSelectedRow() != -1);
+                panelGestionVehiculos.btnEliminar.setEnabled(haySeleccion);
+                panelGestionVehiculos.btnVerHistorial.setEnabled(haySeleccion);
             }
         });
+
+        // --- PANTALLA HISTORIAL (NUEVA LÓGICA) ---
+        panelHistorial.btnVolver.addActionListener(e -> irAGestionVehiculos());
 
         // --- 3. SUBSISTEMA DASHBOARD (BITÁCORA OPERATIVA) ---
         panelDashboard.btnAgregarOrden.addActionListener(e -> {
@@ -279,6 +294,20 @@ public class VentanaPrincipal extends JFrame {
         panelMenu.setNombreUsuario(n);
     }
 
+    // --- MÉTODO NUEVO: LÓGICA PARA VER HISTORIAL ---
+    private void verHistorialSeleccionado() {
+        int f = panelGestionVehiculos.tablaVehiculos.getSelectedRow();
+        if (f != -1) {
+            String p = (String) panelGestionVehiculos.modeloTabla.getValueAt(f, 0);
+            controlador.buscarVehiculoPorPlaca(p).ifPresent(v -> {
+                // Aquí es donde sucede la magia: cargamos los datos en la tabla oculta
+                panelHistorial.cargarHistorial(v);
+                // Y mostramos la pantalla
+                cardLayout.show(panelContenido, "HISTORIAL");
+            });
+        }
+    }
+
     // =========================================================================
     // SECCIÓN 2: ACTUALIZACIÓN DE TABLAS (READ - DATA BINDING)
     // =========================================================================
@@ -296,6 +325,7 @@ public class VentanaPrincipal extends JFrame {
         }
         panelGestionVehiculos.tablaVehiculos.clearSelection();
         panelGestionVehiculos.btnEliminar.setEnabled(false);
+        panelGestionVehiculos.btnVerHistorial.setEnabled(false); // Resetear botón
     }
 
     private void actualizarTablaDeOrdenes(List<Mantenimiento> lista) {
@@ -627,17 +657,24 @@ public class VentanaPrincipal extends JFrame {
         }
     }
 
-    // AQUÍ FUE EL CAMBIO PRINCIPAL PARA CENTRAR LA VENTANITA EN EL PANEL
+    // CORRECCIÓN: LÓGICA DE SELECCIÓN DE VEHÍCULO DESDE BÚSQUEDA
     private void crearNuevaOrdenDesdeBusqueda() {
         int f = panelBusquedaInteligente.tablaResultados.getSelectedRow();
         if (f != -1) {
             String placa = (String) panelBusquedaInteligente.modeloTabla.getValueAt(f, 2);
             vistaAnterior = "BUSQUEDA";
             panelFormularioMantenimiento.prepararParaNuevaOrden(controlador.obtenerTodosLosVehiculos());
-            panelFormularioMantenimiento.comboVehiculos.setSelectedItem(placa);
-            cardLayout.show(panelContenido, "FORMULARIO_MANTENIMIENTO");
 
-            // CAMBIO: 'panelContenido' en vez de 'this' para centrar en la sección
+            // Selección automática en el ComboBox buscando coincidencia de inicio
+            for (int i = 0; i < panelFormularioMantenimiento.comboVehiculos.getItemCount(); i++) {
+                String item = panelFormularioMantenimiento.comboVehiculos.getItemAt(i);
+                if (item.startsWith(placa + " ")) { // Coincidencia exacta del inicio de la placa
+                    panelFormularioMantenimiento.comboVehiculos.setSelectedIndex(i);
+                    break;
+                }
+            }
+
+            cardLayout.show(panelContenido, "FORMULARIO_MANTENIMIENTO");
             JOptionPane.showMessageDialog(panelContenido, "Vehículo " + placa + " seleccionado.", "Asistente", JOptionPane.INFORMATION_MESSAGE);
         }
     }

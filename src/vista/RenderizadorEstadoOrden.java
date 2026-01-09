@@ -30,7 +30,7 @@ import java.awt.*;
 public class RenderizadorEstadoOrden extends DefaultTableCellRenderer {
 
     /**
-     * Este método es el núcleo del renderizador y se llama automáticamente por la JTable
+     * Este metodo es el núcleo del renderizador y se llama automáticamente por la JTable
      * para cada celda que necesita ser dibujada en la columna asignada.
      * PRINCIPIO POO: Polimorfismo (Sobrescritura / Overriding) - Se redefine el método
      * `getTableCellRendererComponent` de la clase padre para implementar una lógica

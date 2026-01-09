@@ -57,7 +57,7 @@ public class BotonFuturista extends JButton {
     }
 
     /**
-     * Sobrescribe el método `paintComponent` para personalizar el dibujado del botón.
+     * Sobrescribe el metodo `paintComponent` para personalizar el dibujado del botón.
      * Este es el núcleo del componente y un ejemplo claro de Polimorfismo.
      * PRINCIPIO POO: Polimorfismo (Sobrescritura / Overriding) - Se redefine el
      * método `paintComponent` heredado de JComponent para implementar una lógica

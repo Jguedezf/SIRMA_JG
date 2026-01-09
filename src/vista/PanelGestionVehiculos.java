@@ -43,9 +43,13 @@ public class PanelGestionVehiculos extends JPanel {
     // --- ATRIBUTOS DE UI (Públicos para acceso desde el Controlador/Mediador) ---
     public JTextField txtPlaca, txtMarca, txtModelo, txtAnio, txtColor;
     public JTextField txtNombrePropietario, txtCedulaPropietario, txtTelefonoPropietario, txtDireccion;
+
     public JTable tablaVehiculos;
     public DefaultTableModel modeloTabla;
+
+    // Botones de acción
     public BotonFuturista btnGuardar, btnLimpiar, btnEliminar;
+    public BotonFuturista btnVerHistorial; // <--- NUEVO ATRIBUTO PARA EL BOTÓN HISTORIAL
 
     // Estado transaccional para control de ediciones
     public Vehiculo vehiculoEnEdicion = null;
@@ -215,16 +219,28 @@ public class PanelGestionVehiculos extends JPanel {
         pCentro.add(scroll, BorderLayout.CENTER);
         add(pCentro, BorderLayout.CENTER);
 
-        // --- 4. SECCIÓN SUR: BOTONERA INFERIOR ---
+        // --- 4. SECCIÓN SUR: BOTONERA INFERIOR (MODIFICADA) ---
         JPanel pSur = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pSur.setOpaque(false);
+
+        // >>> NUEVO BOTÓN: VER HISTORIAL <<<
+        btnVerHistorial = new BotonFuturista("Ver Historial Completo");
+        btnVerHistorial.setBackground(new Color(0, 120, 215)); // Azul corporativo (diferente al rojo)
+        btnVerHistorial.setIcon(cargarIconoBtn("fondo/icono_lupa.png", 24)); // Reutiliza icono lupa
+        btnVerHistorial.setPreferredSize(new Dimension(230, 45)); // Tamaño ergonómico
+        btnVerHistorial.setIconTextGap(10);
+        btnVerHistorial.setEnabled(false); // Inicia deshabilitado hasta seleccionar fila
+
         btnEliminar = new BotonFuturista("Eliminar Vehículo Seleccionado");
         btnEliminar.setBackground(new Color(150, 50, 50)); // Rojo semántico para acción destructiva
         btnEliminar.setIcon(cargarIconoBtn("fondo/icono_eliminar.png", 24));
         btnEliminar.setPreferredSize(new Dimension(280, 45));
         btnEliminar.setIconTextGap(15);
         btnEliminar.setEnabled(false); // Estado inicial deshabilitado
+
+        pSur.add(btnVerHistorial); // Agregamos el nuevo botón al panel
         pSur.add(btnEliminar);
+
         add(pSur, BorderLayout.SOUTH);
     }
 
@@ -329,7 +345,11 @@ public class PanelGestionVehiculos extends JPanel {
         lblLogoMarca.setIcon(null);
         vehiculoEnEdicion = null;
         if(btnGuardar instanceof JButton) btnGuardar.setText("GUARDAR");
+
+        // Resetear botones de acción
         btnEliminar.setEnabled(false);
+        btnVerHistorial.setEnabled(false);
+
         tablaVehiculos.clearSelection();
     }
 }

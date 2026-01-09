@@ -20,17 +20,21 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
- * Clase Mantenimiento que representa una orden de servicio individual.
- * Implementa la interfaz 'Serializable' para permitir que sus instancias
- * sean guardadas en disco.
- * PRINCIPIO POO: Persistencia - Al ser Serializable, el estado de un objeto
- * Mantenimiento puede ser almacenado en un archivo y recuperado posteriormente.
+ * IDENTIFICACIÓN DE CLASE: Mantenimiento
+ * Representa una orden de servicio individual dentro del modelo de dominio.
+ * * PRINCIPIO POO: Persistencia
+ * Implementa la interfaz 'Serializable' para permitir que el estado de las
+ * instancias (objetos) sea transformado en bytes para su almacenamiento en disco.
  */
 public class Mantenimiento implements Serializable {
 
-    // --- ATRIBUTOS ---
-    // PRINCIPIO POO: Encapsulamiento - Todos los atributos son privados para proteger
-    // el estado interno del objeto. El acceso se controla a través de getters y setters.
+    // -------------------------------------------------------------------------
+    // IDENTIFICACIÓN DE ATRIBUTOS
+    // -------------------------------------------------------------------------
+    // PRINCIPIO POO: Encapsulamiento
+    // Se declaran con modificador de acceso 'private' para proteger la integridad
+    // de los datos y obligar el uso de métodos de acceso (Getters/Setters).
+
     private String idOrden;
     private String estado;
     private String tipoServicio;
@@ -38,47 +42,45 @@ public class Mantenimiento implements Serializable {
     private double costoManoObra;
     private double costoRepuestos;
     private int kilometrajeActual;
-    private final LocalDate fechaRealizacion; // Inmutable una vez creada la orden
+
+    // Lo que se instancia: Objetos de tipo LocalDate para gestión temporal.
+    private final LocalDate fechaRealizacion; // Inmutable una vez instanciada
     private LocalDate fechaProximoServicio;
 
+    // NUEVO ATRIBUTO para la regla de negocio de los 5.000 km
+    private int kilometrajeProximoServicio;
+
+    // -------------------------------------------------------------------------
+    // MÉTODOS CONSTRUCTORES
+    // -------------------------------------------------------------------------
+    // PRINCIPIO POO: Polimorfismo Estático (Sobrecarga)
+    // Se definen múltiples constructores con diferentes firmas (parámetros) para
+    // permitir la instanciación del objeto en distintos contextos (Nuevo vs Carga).
+
     /**
-     * Constructor para crear una nueva orden de servicio desde la interfaz gráfica.
-     * Inicializa la orden con estado "Pendiente" y la fecha actual.
-     * PRINCIPIO POO: Polimorfismo Estático (Sobrecarga) - Múltiples constructores
-     * con diferentes parámetros para distintos escenarios de creación.
-     *
-     * @param tipoServicio El tipo de servicio a realizar.
-     * @param descripcion Descripción detallada del trabajo.
-     * @param manoObra Costo de la mano de obra.
-     * @param repuestos Costo de los repuestos.
-     * @param kilometraje Kilometraje del vehículo al momento del servicio.
+     * Constructor 1: Para crear una NUEVA orden desde la GUI.
+     * * ENTRADA: Datos primitivos y Strings provenientes del formulario.
+     * PROCESO: Asignación inicial de valores y cálculo automático de próxima visita.
      */
     public Mantenimiento(String tipoServicio, String descripcion, double manoObra, double repuestos, int kilometraje) {
-        // ENTRADA: Datos del formulario de nueva orden.
-        this.idOrden = null; // El ID será asignado por el Controlador.
-        this.estado = "Pendiente";
+        this.idOrden = null; // El ID será asignado posteriormente por el Controlador
+        this.estado = "Pendiente"; // Valor por defecto
         this.tipoServicio = tipoServicio;
         this.descripcionDetallada = descripcion;
         this.costoManoObra = manoObra;
         this.costoRepuestos = repuestos;
         this.kilometrajeActual = kilometraje;
-        this.fechaRealizacion = LocalDate.now(); // Se asigna la fecha del sistema.
-        // PROCESO:
+
+        // Lo que se instancia: Fecha actual del sistema
+        this.fechaRealizacion = LocalDate.now();
+
+        // PROCESO: Ejecución de regla de negocio
         calcularProximaVisita();
     }
 
     /**
-     * Constructor sobrecargado para cargar datos existentes desde persistencia
-     * o para la creación de datos de prueba.
-     *
-     * @param id ID único de la orden.
-     * @param tipo Tipo de servicio.
-     * @param desc Descripción del servicio.
-     * @param manoObra Costo de mano de obra.
-     * @param repuestos Costo de repuestos.
-     * @param km Kilometraje del vehículo.
-     * @param fecha Fecha en que se realizó o registró el servicio.
-     * @param estado Estado actual de la orden.
+     * Constructor 2: Para CARGAR datos existentes (Persistencia/Pruebas).
+     * ENTRADA: Todos los atributos del objeto recuperado.
      */
     public Mantenimiento(String id, String tipo, String desc, double manoObra, double repuestos, int km, LocalDate fecha, String estado) {
         this.idOrden = id;
@@ -89,12 +91,13 @@ public class Mantenimiento implements Serializable {
         this.kilometrajeActual = km;
         this.fechaRealizacion = fecha;
         this.estado = estado;
+
+        // PROCESO: Recálculo de proyección
         calcularProximaVisita();
     }
 
     /**
-     * Constructor sobrecargado, principalmente para la carga de datos de prueba,
-     * asumiendo un estado "Finalizado" por defecto si no se especifica.
+     * Constructor 3: Sobrecarga auxiliar para datos de prueba rápidos.
      */
     public Mantenimiento(String id, String tipo, String desc, double manoObra, double repuestos, int km, LocalDate fecha) {
         this.idOrden = id;
@@ -104,32 +107,48 @@ public class Mantenimiento implements Serializable {
         this.costoRepuestos = repuestos;
         this.kilometrajeActual = km;
         this.fechaRealizacion = fecha;
-        this.estado = "Finalizado";
+        this.estado = "Finalizado"; // Valor por defecto
+
+        // PROCESO: Recálculo de proyección
         calcularProximaVisita();
     }
 
+    // -------------------------------------------------------------------------
+    // MÉTODOS DE COMPORTAMIENTO Y LÓGICA DE NEGOCIO
+    // -------------------------------------------------------------------------
+
     /**
-     * Calcula la fecha estimada del próximo servicio, sumando 3 meses a la fecha actual.
+     * MÉTODO: calcularProximaVisita
+     * Aplica la regla de mantenimiento preventivo para condiciones de uso severo.
+     * * VALIDACIÓN: Verifica que la fecha de realización no sea nula.
+     * PROCESO:
+     * 1. Suma 3 meses a la fecha actual.
+     * 2. Suma 5.000 km al kilometraje actual.
      */
     private void calcularProximaVisita() {
         if (this.fechaRealizacion != null) {
+            // Regla de Tiempo
             this.fechaProximoServicio = this.fechaRealizacion.plusMonths(3);
+            // Regla de Kilometraje (Ajuste solicitado)
+            this.kilometrajeProximoServicio = this.kilometrajeActual + 5000;
         }
     }
 
     /**
-     * Calcula y devuelve el costo total de la orden de servicio.
-     * @return La suma del costo de mano de obra y el costo de repuestos.
+     * MÉTODO: getCostoTotal
+     * Calcula el monto final de la orden.
+     * * PROCESO: Operación aritmética de suma (Mano de Obra + Repuestos).
+     * SALIDA: Retorna el valor total como double.
      */
     public double getCostoTotal() {
-        // PROCESO: Suma de los costos parciales.
-        // SALIDA: Costo total como un double.
         return costoManoObra + costoRepuestos;
     }
 
-    // --- SECCIÓN DE GETTERS Y SETTERS ---
-    // Métodos públicos que permiten un acceso controlado a los atributos privados,
-    // cumpliendo con el principio de Encapsulamiento.
+    // -------------------------------------------------------------------------
+    // MÉTODOS DE ACCESO (GETTERS Y SETTERS)
+    // -------------------------------------------------------------------------
+    // PRINCIPIO POO: Encapsulamiento
+    // Interfaz pública para leer o modificar el estado interno del objeto.
 
     public String getIdOrden() { return idOrden; }
     public void setIdOrden(String idOrden) { this.idOrden = idOrden; }
@@ -154,4 +173,10 @@ public class Mantenimiento implements Serializable {
 
     public LocalDate getFechaRealizacion() { return fechaRealizacion; }
     public LocalDate getFechaProximoServicio() { return fechaProximoServicio; }
+
+    // Getters y Setters para el nuevo atributo de kilometraje proyectado
+    public int getKilometrajeProximoServicio() { return kilometrajeProximoServicio; }
+    public void setKilometrajeProximoServicio(int kilometrajeProximoServicio) {
+        this.kilometrajeProximoServicio = kilometrajeProximoServicio;
+    }
 }

@@ -53,7 +53,7 @@ public class PanelContenidoPrincipal extends JPanel {
 
     /**
      * Sobrescribe el metodo de pintado del panel para dibujar el fondo personalizado.
-     * Este método es llamado automaticamente por el sistema de renderizado de Swing.
+     * Este metodo es llamado automaticamente por el sistema de renderizado de Swing.
      * PRINCIPIO POO: Polimorfismo (Sobrescritura) - Redefine el comportamiento de
      * `paintComponent` para añadir la lógica de dibujado de la imagen.
      *

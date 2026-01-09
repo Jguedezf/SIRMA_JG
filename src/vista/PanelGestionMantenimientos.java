@@ -25,6 +25,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.List;
+import java.util.Locale; // Import necesario para formateo de decimales
 import javax.imageio.ImageIO;
 
 /**
@@ -154,7 +155,10 @@ public class PanelGestionMantenimientos extends JPanel {
         gbc.gridy++;
         campoMecanicoAsignado = new JTextField();
         estilizarCampo(campoMecanicoAsignado);
-        campoMecanicoAsignado.setEditable(false);
+
+        // CORRECCIÓN: Se permite edición manual si el usuario lo desea
+        campoMecanicoAsignado.setEditable(true);
+
         campoMecanicoAsignado.setBackground(new Color(60, 65, 70));
         campoMecanicoAsignado.setForeground(Color.CYAN);
         pForm.add(campoMecanicoAsignado, gbc);
@@ -224,8 +228,11 @@ public class PanelGestionMantenimientos extends JPanel {
         comboServicios.setSelectedItem(m.getTipoServicio());
         comboEstado.setSelectedItem(m.getEstado());
         campoKilometraje.setText(String.valueOf(m.getKilometrajeActual()));
-        campoCostoManoObra.setText(String.valueOf(m.getCostoManoObra()).replace(",", "."));
-        campoCostoRepuestos.setText(String.valueOf(m.getCostoRepuestos()).replace(",", "."));
+
+        // CORRECCIÓN: Formato a dos decimales para visualización correcta
+        campoCostoManoObra.setText(String.format(Locale.US, "%.2f", m.getCostoManoObra()));
+        campoCostoRepuestos.setText(String.format(Locale.US, "%.2f", m.getCostoRepuestos()));
+
         areaDescripcion.setText(m.getDescripcionDetallada());
         btnImprimirSolicitud.setEnabled(true);
     }
@@ -271,7 +278,8 @@ public class PanelGestionMantenimientos extends JPanel {
 
     private BotonFuturista crearBoton(String t, String r) {
         BotonFuturista b = new BotonFuturista(t);
-        b.setPreferredSize(new Dimension(160, 80));
+        // AJUSTE: Ancho aumentado a 200 para que el texto "Imprimir Solicitud" quepa bien.
+        b.setPreferredSize(new Dimension(200, 80));
         b.setVerticalTextPosition(SwingConstants.BOTTOM);
         b.setHorizontalTextPosition(SwingConstants.CENTER);
         try {

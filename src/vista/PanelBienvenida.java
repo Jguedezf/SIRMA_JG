@@ -170,7 +170,7 @@ public class PanelBienvenida extends JPanel {
                 g2d.setColor(colorBorde);
                 g2d.fillRoundRect(0, 0, 10, getHeight(), 10, 10);
 
-                // Llama al método padre para que dibuje el texto del botón encima de nuestro fondo.
+                // Llama al metodo padre para que dibuje el texto del botón encima de nuestro fondo.
                 super.paintComponent(g);
             }
         };

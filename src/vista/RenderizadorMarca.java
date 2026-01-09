@@ -29,7 +29,7 @@ import java.io.File;
 public class RenderizadorMarca extends DefaultTableCellRenderer {
 
     /**
-     * Sobrescribe el método de renderizado para añadir un ícono junto al nombre de la marca.
+     * Sobrescribe el metodo de renderizado para añadir un ícono junto al nombre de la marca.
      * PRINCIPIO POO: Polimorfismo (Sobrescritura / Overriding) - Redefine el método
      * `getTableCellRendererComponent` para modificar el contenido visual de la celda.
      *

@@ -36,23 +36,26 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * Clase ControladorSIRMA que implementa la lógica de negocio del sistema.
+ * IDENTIFICACIÓN DE CLASE: ControladorSIRMA
+ * Implementa la lógica de negocio del sistema y orquesta el flujo de datos.
  * Actúa como intermediario entre el Modelo (datos) y la Vista (interfaz gráfica).
- * PRINCIPIO POO: Modularidad - Descompone el sistema en módulos (MVC).
+ * PRINCIPIO POO: Modularidad - Descompone el sistema en capas funcionales (MVC).
  */
 public class ControladorSIRMA {
 
     // --- ATRIBUTOS ---
+    // PRINCIPIO POO: Encapsulamiento (private)
     private List<Vehiculo> listaVehiculos;
     private List<Mecanico> listaMecanicos;
     private final GestionArchivos gestorArchivos;
 
-    // Constantes para los nombres de archivo
+    // Constantes para los nombres de archivo (Persistencia)
     private static final String ARCHIVO_VEHICULOS = "sirma_vehiculos.dat";
     private static final String ARCHIVO_MECANICOS = "sirma_mecanicos.dat";
 
     /**
      * DTO (Data Transfer Object) para empaquetar un Vehículo y su Mantenimiento.
+     * Clase estática anidada para facilitar el transporte de datos complejos.
      */
     public static class VehiculoYMantenimiento {
         public final Vehiculo vehiculo;
@@ -62,6 +65,8 @@ public class ControladorSIRMA {
 
     /**
      * Constructor del Controlador.
+     * PROCESO: Inicializa el gestor de archivos y carga los datos desde el disco.
+     * Si no hay datos previos, carga un set de datos de prueba.
      */
     @SuppressWarnings("unchecked")
     public ControladorSIRMA() {
@@ -69,7 +74,7 @@ public class ControladorSIRMA {
         Object datosVehiculos = gestorArchivos.cargarDatos(ARCHIVO_VEHICULOS);
         Object datosMecanicos = gestorArchivos.cargarDatos(ARCHIVO_MECANICOS);
 
-        // Casting seguro
+        // Casting seguro de objetos recuperados
         this.listaVehiculos = (datosVehiculos instanceof List) ? (List<Vehiculo>) datosVehiculos : new ArrayList<>();
         this.listaMecanicos = (datosMecanicos instanceof List) ? (List<Mecanico>) datosMecanicos : new ArrayList<>();
 
@@ -83,11 +88,20 @@ public class ControladorSIRMA {
     // SECCIÓN 1: LÓGICA DE BÚSQUEDA Y CONSULTAS
     // ============================================================================
 
+    /**
+     * Realiza una búsqueda avanzada de órdenes de servicio con múltiples filtros.
+     * @param texto Texto a buscar (Placa o ID).
+     * @param estado Estado de la orden (Pendiente, Finalizado, etc.).
+     * @param fechaDesdeStr Fecha inicio del rango.
+     * @param fechaHastaStr Fecha fin del rango.
+     * @return Matriz de objetos para poblar la JTable.
+     */
     public Object[][] buscarOrdenesAvanzado(String texto, String estado, String fechaDesdeStr, String fechaHastaStr) {
         String txt = (texto == null) ? "" : texto.toUpperCase().trim();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate fD = null, fH = null;
 
+        // Validación y parseo de fechas
         try {
             if (fechaDesdeStr != null && !fechaDesdeStr.isEmpty()) fD = LocalDate.parse(fechaDesdeStr, fmt);
             if (fechaHastaStr != null && !fechaHastaStr.isEmpty()) fH = LocalDate.parse(fechaHastaStr, fmt);
@@ -96,10 +110,14 @@ public class ControladorSIRMA {
         final LocalDate d = fD; final LocalDate h = fH;
         ArrayList<Object[]> filas = new ArrayList<>();
 
+        // Algoritmo de filtrado
         for (Vehiculo v : listaVehiculos) {
             for (Mantenimiento m : v.getHistorialMantenimientos()) {
+                // Filtro 1: Texto (Coincidencia parcial en Placa o ID)
                 boolean cTxt = txt.isEmpty() || v.getPlaca().toUpperCase().contains(txt) || m.getIdOrden().toUpperCase().contains(txt);
+                // Filtro 2: Estado exacto
                 boolean cEst = estado.equals("Todos") || m.getEstado().equalsIgnoreCase(estado);
+                // Filtro 3: Rango de Fechas
                 boolean cFec = (d == null || !m.getFechaRealizacion().isBefore(d)) && (h == null || !m.getFechaRealizacion().isAfter(h));
 
                 if (cTxt && cEst && cFec) {
@@ -116,17 +134,25 @@ public class ControladorSIRMA {
             }
         }
 
+        // Transformación de Lista a Matriz
         Object[][] data = new Object[filas.size()][7];
         for(int i=0; i<filas.size(); i++) data[i] = filas.get(i);
         return data;
     }
 
+    // ============================================================================
+    // SECCIÓN 2: GESTIÓN CRUD (Create, Read, Update, Delete)
+    // ============================================================================
+
     // --- CRUD de Vehículos ---
+
     public boolean registrarVehiculo(Vehiculo v) {
+        // Validación de unicidad
         if (buscarVehiculoPorPlaca(v.getPlaca()).isPresent()) return false;
         listaVehiculos.add(v);
         return gestorArchivos.guardarDatos(listaVehiculos, ARCHIVO_VEHICULOS);
     }
+
     public boolean actualizarVehiculo(String p, Vehiculo v) {
         for(int i=0; i<listaVehiculos.size(); i++) {
             if(listaVehiculos.get(i).getPlaca().equalsIgnoreCase(p)) {
@@ -136,21 +162,27 @@ public class ControladorSIRMA {
         }
         return false;
     }
+
     public boolean eliminarVehiculo(String p) {
+        // Uso de lambdas para eliminación condicional
         boolean eliminado = listaVehiculos.removeIf(v -> v.getPlaca().equalsIgnoreCase(p));
         if(eliminado) gestorArchivos.guardarDatos(listaVehiculos, ARCHIVO_VEHICULOS);
         return eliminado;
     }
+
     public Optional<Vehiculo> buscarVehiculoPorPlaca(String p) {
         return listaVehiculos.stream().filter(v -> v.getPlaca().equalsIgnoreCase(p)).findFirst();
     }
+
     public List<Vehiculo> obtenerTodosLosVehiculos() { return listaVehiculos; }
 
     // --- CRUD de Mecánicos ---
+
     public boolean agregarMecanico(Mecanico m) {
         listaMecanicos.add(m);
         return gestorArchivos.guardarDatos(listaMecanicos, ARCHIVO_MECANICOS);
     }
+
     public boolean actualizarMecanico(String n, Mecanico m) {
         for(int i=0; i<listaMecanicos.size(); i++) {
             if(listaMecanicos.get(i).getNombreCompleto().equalsIgnoreCase(n)) {
@@ -160,17 +192,21 @@ public class ControladorSIRMA {
         }
         return false;
     }
+
     public boolean eliminarMecanico(String n) {
         boolean eliminado = listaMecanicos.removeIf(m -> m.getNombreCompleto().equalsIgnoreCase(n));
         if(eliminado) gestorArchivos.guardarDatos(listaMecanicos, ARCHIVO_MECANICOS);
         return eliminado;
     }
+
     public List<Mecanico> obtenerTodosLosMecanicos() { return listaMecanicos; }
 
     // --- CRUD de Mantenimientos ---
+
     public Mantenimiento agregarMantenimientoAVehiculo(String p, Mantenimiento m) {
         Optional<Vehiculo> v = buscarVehiculoPorPlaca(p);
         if(v.isPresent()) {
+            // Asignación automática de ID si es nuevo
             if(m.getIdOrden() == null) m.setIdOrden(generarNuevoIdOrden());
             v.get().agregarMantenimiento(m);
             gestorArchivos.guardarDatos(listaVehiculos, ARCHIVO_VEHICULOS);
@@ -178,6 +214,7 @@ public class ControladorSIRMA {
         }
         return null;
     }
+
     public boolean actualizarMantenimiento(Mantenimiento m) {
         for(Vehiculo v : listaVehiculos) {
             for(int i=0; i<v.getHistorialMantenimientos().size(); i++) {
@@ -189,6 +226,7 @@ public class ControladorSIRMA {
         }
         return false;
     }
+
     public boolean eliminarMantenimiento(String id) {
         for(Vehiculo v : listaVehiculos) {
             if(v.getHistorialMantenimientos().removeIf(m -> m.getIdOrden().equals(id))) {
@@ -197,20 +235,47 @@ public class ControladorSIRMA {
         }
         return false;
     }
+
     public Optional<VehiculoYMantenimiento> buscarVehiculoPorIdOrden(String id) {
         for(Vehiculo v : listaVehiculos)
             for(Mantenimiento m : v.getHistorialMantenimientos())
                 if(m.getIdOrden().equalsIgnoreCase(id)) return Optional.of(new VehiculoYMantenimiento(v, m));
         return Optional.empty();
     }
+
     public List<Mantenimiento> obtenerTodasLasOrdenes() {
         return listaVehiculos.stream()
                 .flatMap(v -> v.getHistorialMantenimientos().stream())
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Genera un nuevo ID único para una orden de servicio.
+     * PROCESO: Busca el ID numérico más alto existente y le suma 1.
+     * LOGICA CORREGIDA: Esto evita duplicados si se borran órdenes intermedias.
+     * @return Nuevo ID formateado (Ej: "ORD-012").
+     */
     public String generarNuevoIdOrden() {
-        return String.format("ORD-%03d", obtenerTodasLasOrdenes().size() + 1);
+        int maxId = 0;
+        List<Mantenimiento> todas = obtenerTodasLasOrdenes();
+
+        // Iteración para encontrar el máximo ID actual
+        for (Mantenimiento m : todas) {
+            try {
+                // Se elimina el prefijo "ORD-" para obtener el valor numérico
+                String parteNumerica = m.getIdOrden().replace("ORD-", "");
+                int numero = Integer.parseInt(parteNumerica);
+                if (numero > maxId) {
+                    maxId = numero;
+                }
+            } catch (NumberFormatException e) {
+                // Se ignoran formatos no numéricos por seguridad
+            }
+        }
+        // SALIDA: Nuevo ID formateado sumando 1 al máximo encontrado
+        return String.format("ORD-%03d", maxId + 1);
     }
+
     public String asignarMecanicoInteligente(String tipoServicio) {
         if(tipoServicio == null) return "General";
         for(Mecanico m : listaMecanicos) {
